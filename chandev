@@ -1,4 +1,4 @@
--- CHANN DEV | Ultimate Premium Dashboard (Fixed)
+-- CHANN DEV | Ultimate Premium Dashboard (FIX ANTI-AFK)
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -9,6 +9,7 @@ local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
+local VIM = game:GetService("VirtualInputManager") -- Buat Anti AFK
 
 local oldGui = CoreGui:FindFirstChild("ChannDev_Premium")
 if oldGui then oldGui:Destroy() end
@@ -43,8 +44,8 @@ local config = {
         [18] = Vector3.new(-5543.9, 1112.61, -11651.75),
         [19] = Vector3.new(-6766.57, 1106.15, -11507.13),
         [20] = Vector3.new(-6761.15, 1114.65, -10800.55),
-        [21] = Vector3.new(-6766.88, 1313.09, -10082.26), -- Summit
-        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)   -- BC
+        [21] = Vector3.new(-6766.88, 1313.09, -10082.26),
+        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)
     },
     customSpots = {}
 }
@@ -78,10 +79,7 @@ local function notify(titleText, descText)
     notif.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     notif.Parent = gui
     Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 8)
-    
-    local stroke = Instance.new("UIStroke", notif)
-    stroke.Color = Color3.fromRGB(130, 60, 200)
-    stroke.Thickness = 2
+    Instance.new("UIStroke", notif).Color = Color3.fromRGB(130, 60, 200)
     
     local t1 = Instance.new("TextLabel")
     t1.Size = UDim2.new(1, -10, 0, 25)
@@ -106,7 +104,6 @@ local function notify(titleText, descText)
     t2.Parent = notif
 
     TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(1, -270, 0, 20)}):Play()
-    
     task.delay(3, function()
         local tw = TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(1, 20, 0, 20)})
         tw:Play()
@@ -140,7 +137,6 @@ local function makeDraggable(frame, dragArea)
     end)
 end
 
--- Logo C
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(0, 50, 0, 50)
 toggleBtn.Position = UDim2.new(0, 20, 0, 20)
@@ -153,7 +149,6 @@ toggleBtn.Parent = gui
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1,0)
 makeDraggable(toggleBtn, toggleBtn)
 
--- MAIN WINDOW
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 650, 0, 450)
 mainFrame.Position = UDim2.new(0.5, -325, 0.5, -225)
@@ -222,9 +217,8 @@ content.Position = UDim2.new(0, 170, 0, 65)
 content.BackgroundTransparency = 1
 content.Parent = mainFrame
 
--- FIX TAB LOGIC
 local tabs = {}
-local tabBtns = {} -- Simpen tombol biar gak salah index
+local tabBtns = {}
 
 local function createSidebarTab(name, index)
     local btn = Instance.new("TextButton")
@@ -244,7 +238,7 @@ local function createSidebarTab(name, index)
     page.Visible = false
     page.Parent = content
     tabs[btn] = page
-    table.insert(tabBtns, btn) -- Masukin ke list biar gampang dipanggil
+    table.insert(tabBtns, btn)
     
     btn.MouseEnter:Connect(function()
         if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}):Play() end
@@ -263,7 +257,7 @@ local function createSidebarTab(name, index)
     return page
 end
 
--- ============ TAB 1: AUTO SUMMIT ============
+-- TAB 1
 local cpPage = createSidebarTab("Auto Summit", 0)
 local autoBtn = Instance.new("TextButton")
 autoBtn.Size = UDim2.new(1, 0, 0, 50)
@@ -286,7 +280,7 @@ infoTxt.TextSize = 14
 infoTxt.TextYAlignment = Enum.TextYAlignment.Top
 infoTxt.Parent = cpPage
 
--- ============ TAB 2: TELEPORTASI ============
+-- TAB 2
 local tpPage = createSidebarTab("Teleportasi", 1)
 local tpScroll = Instance.new("ScrollingFrame")
 tpScroll.Size = UDim2.new(1, 0, 1, -60)
@@ -304,7 +298,7 @@ addSpotBtn.Font = Enum.Font.GothamBold
 addSpotBtn.Parent = tpPage
 Instance.new("UICorner", addSpotBtn).CornerRadius = UDim.new(0, 8)
 
--- ============ TAB 3: SETTINGS ============
+-- TAB 3
 local setPage = createSidebarTab("Settings", 2)
 
 local function makeSettingBtn(txt, posY, color, callback)
@@ -374,7 +368,6 @@ local rejoinBtn = makeSettingBtn("REJOIN SERVER", 175, Color3.fromRGB(50, 150, 2
     end
 end)
 
--- CONFIG MANAGER
 local cfgTitle = Instance.new("TextLabel")
 cfgTitle.Size = UDim2.new(1, 0, 0, 20)
 cfgTitle.Position = UDim2.new(0, 0, 0, 225)
@@ -512,7 +505,6 @@ local function render()
     end
 end
 
--- Logic Auto Summit Toggle
 autoBtn.MouseButton1Click:Connect(function()
     config.autoSummit = not config.autoSummit
     if config.autoSummit then
@@ -544,7 +536,6 @@ autoBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Logic Add Spot
 addSpotBtn.MouseButton1Click:Connect(function()
     local hrp = getHRP()
     if hrp then
@@ -554,15 +545,20 @@ addSpotBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Anti AFK & Fly
+-- ============ ANTI AFK FIX (VIRTUAL INPUT) ============
 task.spawn(function()
-    while task.wait(60) do
-        if config.antiAfk and LocalPlayer.Character then
-            LocalPlayer.Character:MoveTo(LocalPlayer.Character.HumanoidRootPart.Position)
+    while task.wait(45) do -- Tiap 45 detik
+        if config.antiAfk then
+            -- Pura-pura ngetik spasi (gak bikin karakter lompat)
+            VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            task.wait(0.1)
+            VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+            print("[ANTI-AFK] Simulasi tombol dikirim")
         end
     end
 end)
 
+-- ============ FLY ============
 local flyConnection, bv, bg
 RunService.RenderStepped:Connect(function()
     if config.flying then
@@ -595,17 +591,14 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- BUKA/TUTUP
 minBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 toggleBtn.MouseButton1Click:Connect(function() mainFrame.Visible = not mainFrame.Visible end)
 
--- FIX TAB DEFAULT
 if tabBtns[1] then
     tabs[tabBtns[1]].Visible = true
     TweenService:Create(tabBtns[1], TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80), TextColor3 = Color3.new(1,1,1)}):Play()
 end
 
--- JALANKAN RENDER SETELAH SEMUA UI SELESAI DIBUAT
 render()
 notify("ChannDev Loaded", "Selamat datang kembali, Dotbhai!")
