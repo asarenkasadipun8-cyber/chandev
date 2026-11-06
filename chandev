@@ -1,4 +1,4 @@
--- CHANN DEV | Premium Dashboard (2 Tabs)
+-- CHANN DEV | Windows-Style Dashboard
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -16,9 +16,8 @@ if oldGui then oldGui:Destroy() end
 local config = {
     speed = 50,
     flySpeed = 60,
-    waitPerCP = 1.0,
+    tpSpeed = 1.0,
     autoSummit = false,
-    antiAfk = true,
     checkpoints = {}
 }
 local CONFIG_FILE = "ChannDev_Config.json"
@@ -32,6 +31,7 @@ if isfile and isfile(CONFIG_FILE) then
             end
         end
         if data.speed then config.speed = data.speed end
+        if data.tpSpeed then config.tpSpeed = data.tpSpeed end
     end
 end
 
@@ -54,11 +54,37 @@ end
 -- Anti AFK
 task.spawn(function()
     while task.wait(60) do
-        if config.antiAfk and LocalPlayer.Character then
+        if LocalPlayer.Character then
             LocalPlayer.Character:MoveTo(LocalPlayer.Character.HumanoidRootPart.Position)
         end
     end
 end)
+
+-- ============ DRAG LOGIC ============
+local function makeDraggable(frame, dragArea)
+    local dragging, dragInput, dragStart, startPos
+    dragArea.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    dragArea.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
 
 -- ============ UI SETUP ============
 local gui = Instance.new("ScreenGui")
@@ -66,22 +92,22 @@ gui.Name = "ChannDev_Dashboard"
 gui.Parent = CoreGui
 gui.ResetOnSpawn = false
 
--- Floating Logo (Hide/Show)
+-- Floating Logo (Hide Mode)
 local toggleBtn = Instance.new("TextButton")
-toggleBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleBtn.Size = UDim2.new(0, 50, 0, 50)
 toggleBtn.Position = UDim2.new(0, 20, 0, 20)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
 toggleBtn.Text = "C"
 toggleBtn.TextColor3 = Color3.new(1,1,1)
 toggleBtn.Font = Enum.Font.GothamBlack
-toggleBtn.TextSize = 20
+toggleBtn.TextSize = 22
 toggleBtn.Parent = gui
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1,0)
 
--- MAIN FRAME
+-- MAIN WINDOW
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 600, 0, 400)
-mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+mainFrame.Size = UDim2.new(0, 600, 0, 420)
+mainFrame.Position = UDim2.new(0.5, -300, 0.5, -210)
 mainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
@@ -94,6 +120,7 @@ topBar.Size = UDim2.new(1, 0, 0, 50)
 topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
 topBar.Parent = mainFrame
 Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
+makeDraggable(mainFrame, topBar)
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 1, 0)
@@ -105,6 +132,19 @@ title.TextSize = 16
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = topBar
 
+-- Tombol Minimize
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.new(0, 35, 0, 35)
+minBtn.Position = UDim2.new(1, -85, 0, 7)
+minBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+minBtn.Text = "-"
+minBtn.TextColor3 = Color3.new(1,1,1)
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 20
+minBtn.Parent = topBar
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 6)
+
+-- Tombol Close
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 35, 0, 35)
 closeBtn.Position = UDim2.new(1, -45, 0, 7)
@@ -114,23 +154,21 @@ closeBtn.TextColor3 = Color3.new(1,1,1)
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.Parent = topBar
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
-closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 
--- Sidebar
+-- ============ SIDEBAR ============
 local sidebar = Instance.new("Frame")
 sidebar.Size = UDim2.new(0, 150, 1, -50)
 sidebar.Position = UDim2.new(0, 0, 0, 50)
 sidebar.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
 sidebar.Parent = mainFrame
 
--- Content Area
 local content = Instance.new("Frame")
 content.Size = UDim2.new(1, -160, 1, -60)
 content.Position = UDim2.new(0, 155, 0, 55)
 content.BackgroundTransparency = 1
 content.Parent = mainFrame
 
--- Fungsi Pembuat Tab Sidebar
+-- Tab Manager
 local tabs = {}
 local function createSidebarTab(name, index)
     local btn = Instance.new("TextButton")
@@ -149,21 +187,14 @@ local function createSidebarTab(name, index)
     page.BackgroundTransparency = 1
     page.Visible = false
     page.Parent = content
-    
     tabs[btn] = page
     
-    -- Hover Effect
     btn.MouseEnter:Connect(function()
-        if not page.Visible then
-            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 50)}):Play()
-        end
+        if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 50)}):Play() end
     end)
     btn.MouseLeave:Connect(function()
-        if not page.Visible then
-            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 36)}):Play()
-        end
+        if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 36)}):Play() end
     end)
-    
     btn.MouseButton1Click:Connect(function()
         for b, p in pairs(tabs) do
             p.Visible = false
@@ -177,7 +208,6 @@ end
 
 -- ============ TAB 1: CHECKPOINT TP ============
 local cpPage = createSidebarTab("Checkpoint TP", 0)
-
 local scroll = Instance.new("ScrollingFrame")
 scroll.Size = UDim2.new(1, -20, 1, -60)
 scroll.Position = UDim2.new(0, 10, 0, 10)
@@ -210,14 +240,22 @@ autoBtn.Font = Enum.Font.GothamBold
 autoBtn.Parent = cpBottomFrame
 Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 6)
 
--- ============ TAB 2: SETTINGS & PLAYER ============
-local setPage = createSidebarTab("Settings & Player", 1)
+-- ============ TAB 2: TELEPORTASI (BARU) ============
+local tpPage = createSidebarTab("Teleportasi", 1)
+local tpScroll = Instance.new("ScrollingFrame")
+tpScroll.Size = UDim2.new(1, -20, 1, -20)
+tpScroll.Position = UDim2.new(0, 10, 0, 10)
+tpScroll.BackgroundTransparency = 1
+tpScroll.Parent = tpPage
+Instance.new("UIListLayout", tpScroll)
 
--- Speed
+-- ============ TAB 3: SETTINGS ============
+local setPage = createSidebarTab("Settings & Player", 2)
+
 local spdLabel = Instance.new("TextLabel")
 spdLabel.Size = UDim2.new(1, 0, 0, 25)
 spdLabel.BackgroundTransparency = 1
-spdLabel.Text = "Kecepatan: " .. config.speed
+spdLabel.Text = "Kecepatan Lari: " .. config.speed
 spdLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 spdLabel.Font = Enum.Font.Gotham
 spdLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -233,10 +271,29 @@ spdBtn.Font = Enum.Font.GothamBold
 spdBtn.Parent = setPage
 Instance.new("UICorner", spdBtn).CornerRadius = UDim.new(0, 6)
 
--- Fly
+local tpSpdLabel = Instance.new("TextLabel")
+tpSpdLabel.Size = UDim2.new(1, 0, 0, 25)
+tpSpdLabel.Position = UDim2.new(0, 0, 0, 70)
+tpSpdLabel.BackgroundTransparency = 1
+tpSpdLabel.Text = "Kecepatan TP: " .. config.tpSpeed .. "s"
+tpSpdLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+tpSpdLabel.Font = Enum.Font.Gotham
+tpSpdLabel.TextXAlignment = Enum.TextXAlignment.Left
+tpSpdLabel.Parent = setPage
+
+local tpSpdBtn = Instance.new("TextButton")
+tpSpdBtn.Size = UDim2.new(1, 0, 0, 35)
+tpSpdBtn.Position = UDim2.new(0, 0, 0, 95)
+tpSpdBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+tpSpdBtn.Text = "SET TP SPEED (Ubah)"
+tpSpdBtn.TextColor3 = Color3.new(1,1,1)
+tpSpdBtn.Font = Enum.Font.GothamBold
+tpSpdBtn.Parent = setPage
+Instance.new("UICorner", tpSpdBtn).CornerRadius = UDim.new(0, 6)
+
 local flyBtn = Instance.new("TextButton")
 flyBtn.Size = UDim2.new(1, 0, 0, 35)
-flyBtn.Position = UDim2.new(0, 0, 0, 70)
+flyBtn.Position = UDim2.new(0, 0, 0, 145)
 flyBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
 flyBtn.Text = "FLY: OFF"
 flyBtn.TextColor3 = Color3.new(1,1,1)
@@ -244,10 +301,9 @@ flyBtn.Font = Enum.Font.GothamBold
 flyBtn.Parent = setPage
 Instance.new("UICorner", flyBtn).CornerRadius = UDim.new(0, 6)
 
--- Rejoin
 local rejoinBtn = Instance.new("TextButton")
 rejoinBtn.Size = UDim2.new(1, 0, 0, 35)
-rejoinBtn.Position = UDim2.new(0, 0, 0, 115)
+rejoinBtn.Position = UDim2.new(0, 0, 0, 190)
 rejoinBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
 rejoinBtn.Text = "REJOIN SERVER"
 rejoinBtn.TextColor3 = Color3.new(1,1,1)
@@ -255,10 +311,9 @@ rejoinBtn.Font = Enum.Font.GothamBold
 rejoinBtn.Parent = setPage
 Instance.new("UICorner", rejoinBtn).CornerRadius = UDim.new(0, 6)
 
--- Simpan Config
 local saveBtn = Instance.new("TextButton")
 saveBtn.Size = UDim2.new(1, 0, 0, 35)
-saveBtn.Position = UDim2.new(0, 0, 0, 160)
+saveBtn.Position = UDim2.new(0, 0, 0, 235)
 saveBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
 saveBtn.Text = "SIMPAN CONFIG"
 saveBtn.TextColor3 = Color3.new(1,1,1)
@@ -266,23 +321,24 @@ saveBtn.Font = Enum.Font.GothamBold
 saveBtn.Parent = setPage
 Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 6)
 
--- ============ LOGIC CHECKPOINT ============
+-- ============ LOGIC ============
 local function render()
-    for _, v in ipairs(scroll:GetChildren()) do
-        if v:IsA("Frame") then v:Destroy() end
-    end
+    for _, v in ipairs(scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    for _, v in ipairs(tpScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+    
     local keys = {}
     for k, _ in pairs(config.checkpoints) do table.insert(keys, k) end
     table.sort(keys)
 
     for _, i in ipairs(keys) do
         local pos = config.checkpoints[i]
+        
+        -- Render CP List
         local row = Instance.new("Frame")
         row.Size = UDim2.new(1, -10, 0, 35)
         row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
         row.Parent = scroll
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
-        
         local num = Instance.new("TextLabel")
         num.Size = UDim2.new(0, 40, 1, 0)
         num.BackgroundTransparency = 1
@@ -290,7 +346,6 @@ local function render()
         num.TextColor3 = Color3.new(1,1,1)
         num.Font = Enum.Font.GothamBold
         num.Parent = row
-        
         local coord = Instance.new("TextLabel")
         coord.Size = UDim2.new(0, 120, 1, 0)
         coord.Position = UDim2.new(0, 40, 0, 0)
@@ -300,18 +355,6 @@ local function render()
         coord.Font = Enum.Font.Code
         coord.TextXAlignment = Enum.TextXAlignment.Left
         coord.Parent = row
-        
-        local tpBtn = Instance.new("TextButton")
-        tpBtn.Size = UDim2.new(0, 40, 1, -10)
-        tpBtn.Position = UDim2.new(1, -90, 0, 5)
-        tpBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
-        tpBtn.Text = "TP"
-        tpBtn.TextColor3 = Color3.new(1,1,1)
-        tpBtn.Font = Enum.Font.GothamBold
-        tpBtn.Parent = row
-        Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 4)
-        tpBtn.MouseButton1Click:Connect(function() tpTo(pos) end)
-        
         local delBtn = Instance.new("TextButton")
         delBtn.Size = UDim2.new(0, 40, 1, -10)
         delBtn.Position = UDim2.new(1, -45, 0, 5)
@@ -321,10 +364,18 @@ local function render()
         delBtn.Font = Enum.Font.GothamBold
         delBtn.Parent = row
         Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 4)
-        delBtn.MouseButton1Click:Connect(function()
-            config.checkpoints[i] = nil
-            render()
-        end)
+        delBtn.MouseButton1Click:Connect(function() config.checkpoints[i] = nil render() end)
+
+        -- Render Quick TP Button
+        local tpBtn = Instance.new("TextButton")
+        tpBtn.Size = UDim2.new(1, -10, 0, 35)
+        tpBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
+        tpBtn.Text = "Teleport ke CP" .. i
+        tpBtn.TextColor3 = Color3.new(1,1,1)
+        tpBtn.Font = Enum.Font.GothamBold
+        tpBtn.Parent = tpScroll
+        Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 4)
+        tpBtn.MouseButton1Click:Connect(function() tpTo(pos) end)
     end
 end
 
@@ -349,7 +400,7 @@ autoBtn.MouseButton1Click:Connect(function()
                     if not config.autoSummit then break end
                     if config.checkpoints[i] then
                         tpTo(config.checkpoints[i])
-                        task.wait(config.waitPerCP)
+                        task.wait(config.tpSpeed)
                     end
                 end
                 if config.checkpoints[0] then tpTo(config.checkpoints[0]) end
@@ -361,13 +412,18 @@ autoBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ============ LOGIC SETTINGS ============
 spdBtn.MouseButton1Click:Connect(function()
     config.speed = config.speed + 10
     if config.speed > 200 then config.speed = 50 end
-    spdLabel.Text = "Kecepatan: " .. config.speed
+    spdLabel.Text = "Kecepatan Lari: " .. config.speed
     local hum = getHum()
     if hum then hum.WalkSpeed = config.speed end
+end)
+
+tpSpdBtn.MouseButton1Click:Connect(function()
+    config.tpSpeed = config.tpSpeed + 0.5
+    if config.tpSpeed > 3.0 then config.tpSpeed = 0.5 end
+    tpSpdLabel.Text = "Kecepatan TP: " .. config.tpSpeed .. "s"
 end)
 
 rejoinBtn.MouseButton1Click:Connect(function()
@@ -382,10 +438,8 @@ end)
 
 saveBtn.MouseButton1Click:Connect(function()
     if writefile then
-        local data = { speed = config.speed, checkpoints = {} }
-        for k, v in pairs(config.checkpoints) do
-            data.checkpoints[tostring(k)] = {X = v.X, Y = v.Y, Z = v.Z}
-        end
+        local data = { speed = config.speed, tpSpeed = config.tpSpeed, checkpoints = {} }
+        for k, v in pairs(config.checkpoints) do data.checkpoints[tostring(k)] = {X = v.X, Y = v.Y, Z = v.Z} end
         pcall(function()
             writefile(CONFIG_FILE, HttpService:JSONEncode(data))
             saveBtn.Text = "TERSIMPAN!"
@@ -395,7 +449,7 @@ saveBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Fly Logic
+-- FLY
 local flying = false
 local flyConnection, bv, bg
 flyBtn.MouseButton1Click:Connect(function()
@@ -437,16 +491,10 @@ flyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Hotkey Buka/Tutup
-UIS.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.X then
-        mainFrame.Visible = not mainFrame.Visible
-    end
-end)
-toggleBtn.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
-end)
+-- BUKA/TUTUP LOGIC
+minBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
+closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
+toggleBtn.MouseButton1Click:Connect(function() mainFrame.Visible = not mainFrame.Visible end)
 
 -- Buka Tab Pertama by Default
 tabs[sidebar:GetChildren()[1]].Visible = true
