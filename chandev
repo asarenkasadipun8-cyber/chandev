@@ -1,4 +1,4 @@
--- CHANN DEV | Premium Dashboard (Rejoin Added)
+-- CHANN DEV | Premium Dashboard (2 Tabs)
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -7,20 +7,20 @@ local LocalPlayer = Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
 
 local oldGui = CoreGui:FindFirstChild("ChannDev_Dashboard")
 if oldGui then oldGui:Destroy() end
 
--- ============ CONFIG & DATA ============
+-- ============ CONFIG ============
 local config = {
     speed = 50,
     flySpeed = 60,
     waitPerCP = 1.0,
     autoSummit = false,
-    flying = false,
+    antiAfk = true,
     checkpoints = {}
 }
-
 local CONFIG_FILE = "ChannDev_Config.json"
 
 if isfile and isfile(CONFIG_FILE) then
@@ -32,7 +32,6 @@ if isfile and isfile(CONFIG_FILE) then
             end
         end
         if data.speed then config.speed = data.speed end
-        if data.flySpeed then config.flySpeed = data.flySpeed end
     end
 end
 
@@ -52,10 +51,10 @@ local function tpTo(pos)
     end
 end
 
--- ============ ANTI AFK ============
+-- Anti AFK
 task.spawn(function()
     while task.wait(60) do
-        if LocalPlayer.Character then
+        if config.antiAfk and LocalPlayer.Character then
             LocalPlayer.Character:MoveTo(LocalPlayer.Character.HumanoidRootPart.Position)
         end
     end
@@ -67,11 +66,11 @@ gui.Name = "ChannDev_Dashboard"
 gui.Parent = CoreGui
 gui.ResetOnSpawn = false
 
--- Logo Hide/Show
+-- Floating Logo (Hide/Show)
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(0, 45, 0, 45)
 toggleBtn.Position = UDim2.new(0, 20, 0, 20)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 200)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
 toggleBtn.Text = "C"
 toggleBtn.TextColor3 = Color3.new(1,1,1)
 toggleBtn.Font = Enum.Font.GothamBlack
@@ -79,11 +78,11 @@ toggleBtn.TextSize = 20
 toggleBtn.Parent = gui
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1,0)
 
--- Main Dashboard
+-- MAIN FRAME
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 600, 0, 400)
 mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+mainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
 mainFrame.Visible = false
@@ -92,103 +91,182 @@ Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
 -- Top Bar
 local topBar = Instance.new("Frame")
 topBar.Size = UDim2.new(1, 0, 0, 50)
-topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
 topBar.Parent = mainFrame
 Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
-title.Text = "CHANN DEV | Premium Dashboard"
+title.Text = "  CHANN DEV | Dashboard"
 title.TextColor3 = Color3.new(1,1,1)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 16
+title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = topBar
 
--- Sidebar (Menu Kiri)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -45, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = topBar
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
+
+-- Sidebar
 local sidebar = Instance.new("Frame")
 sidebar.Size = UDim2.new(0, 150, 1, -50)
 sidebar.Position = UDim2.new(0, 0, 0, 50)
-sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+sidebar.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
 sidebar.Parent = mainFrame
 
--- Content Area (Kanan)
+-- Content Area
 local content = Instance.new("Frame")
-content.Size = UDim2.new(1, -150, 1, -50)
-content.Position = UDim2.new(0, 150, 0, 50)
+content.Size = UDim2.new(1, -160, 1, -60)
+content.Position = UDim2.new(0, 155, 0, 55)
 content.BackgroundTransparency = 1
 content.Parent = mainFrame
 
--- Tab System
+-- Fungsi Pembuat Tab Sidebar
 local tabs = {}
-local function createTab(name)
+local function createSidebarTab(name, index)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 45)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    btn.Size = UDim2.new(1, -20, 0, 45)
+    btn.Position = UDim2.new(0, 10, 0, 15 + (index * 50))
+    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
     btn.Text = "  " .. name
-    btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+    btn.TextColor3 = Color3.fromRGB(180, 180, 190)
     btn.Font = Enum.Font.GothamBold
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.Parent = sidebar
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
     
     local page = Instance.new("Frame")
-    page.Size = UDim2.new(1, -20, 1, -20)
-    page.Position = UDim2.new(0, 10, 0, 10)
+    page.Size = UDim2.new(1, 0, 1, 0)
     page.BackgroundTransparency = 1
     page.Visible = false
     page.Parent = content
     
     tabs[btn] = page
     
+    -- Hover Effect
+    btn.MouseEnter:Connect(function()
+        if not page.Visible then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 50)}):Play()
+        end
+    end)
+    btn.MouseLeave:Connect(function()
+        if not page.Visible then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 36)}):Play()
+        end
+    end)
+    
     btn.MouseButton1Click:Connect(function()
         for b, p in pairs(tabs) do
             p.Visible = false
-            b.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-            b.TextColor3 = Color3.fromRGB(180, 180, 180)
+            TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 36), TextColor3 = Color3.fromRGB(180, 180, 190)}):Play()
         end
         page.Visible = true
-        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        btn.TextColor3 = Color3.new(1,1,1)
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 65), TextColor3 = Color3.new(1,1,1)}):Play()
     end)
     return page
 end
 
--- ============ TAB 1: CHECKPOINTS ============
-local cpPage = createTab("Checkpoints")
+-- ============ TAB 1: CHECKPOINT TP ============
+local cpPage = createSidebarTab("Checkpoint TP", 0)
 
 local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, 0, 1, -60)
+scroll.Size = UDim2.new(1, -20, 1, -60)
+scroll.Position = UDim2.new(0, 10, 0, 10)
 scroll.BackgroundTransparency = 1
 scroll.Parent = cpPage
 Instance.new("UIListLayout", scroll)
 
--- Tombol Aksi Bawah
-local btnFrame = Instance.new("Frame")
-btnFrame.Size = UDim2.new(1, 0, 0, 40)
-btnFrame.Position = UDim2.new(0, 0, 1, -40)
-btnFrame.BackgroundTransparency = 1
-btnFrame.Parent = cpPage
+local cpBottomFrame = Instance.new("Frame")
+cpBottomFrame.Size = UDim2.new(1, 0, 0, 40)
+cpBottomFrame.Position = UDim2.new(0, 0, 1, -40)
+cpBottomFrame.BackgroundTransparency = 1
+cpBottomFrame.Parent = cpPage
 
 local addBtn = Instance.new("TextButton")
-addBtn.Size = UDim2.new(0, 180, 1, 0)
-addBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 120)
-addBtn.Text = "+ Simpan Koordinat"
+addBtn.Size = UDim2.new(0.48, 0, 1, 0)
+addBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+addBtn.Text = "+ Simpan Posisi"
 addBtn.TextColor3 = Color3.new(1,1,1)
 addBtn.Font = Enum.Font.GothamBold
-addBtn.Parent = btnFrame
+addBtn.Parent = cpBottomFrame
 Instance.new("UICorner", addBtn).CornerRadius = UDim.new(0, 6)
 
 local autoBtn = Instance.new("TextButton")
-autoBtn.Size = UDim2.new(0, 180, 1, 0)
-autoBtn.Position = UDim2.new(1, -180, 0, 0)
+autoBtn.Size = UDim2.new(0.48, 0, 1, 0)
+autoBtn.Position = UDim2.new(0.52, 0, 0, 0)
 autoBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
-autoBtn.Text = "MULAI AUTO TP"
+autoBtn.Text = "Auto TP: OFF"
 autoBtn.TextColor3 = Color3.new(1,1,1)
 autoBtn.Font = Enum.Font.GothamBold
-autoBtn.Parent = btnFrame
+autoBtn.Parent = cpBottomFrame
 Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 6)
 
--- Render List
+-- ============ TAB 2: SETTINGS & PLAYER ============
+local setPage = createSidebarTab("Settings & Player", 1)
+
+-- Speed
+local spdLabel = Instance.new("TextLabel")
+spdLabel.Size = UDim2.new(1, 0, 0, 25)
+spdLabel.BackgroundTransparency = 1
+spdLabel.Text = "Kecepatan: " .. config.speed
+spdLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+spdLabel.Font = Enum.Font.Gotham
+spdLabel.TextXAlignment = Enum.TextXAlignment.Left
+spdLabel.Parent = setPage
+
+local spdBtn = Instance.new("TextButton")
+spdBtn.Size = UDim2.new(1, 0, 0, 35)
+spdBtn.Position = UDim2.new(0, 0, 0, 25)
+spdBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
+spdBtn.Text = "SET SPEED (+10)"
+spdBtn.TextColor3 = Color3.new(1,1,1)
+spdBtn.Font = Enum.Font.GothamBold
+spdBtn.Parent = setPage
+Instance.new("UICorner", spdBtn).CornerRadius = UDim.new(0, 6)
+
+-- Fly
+local flyBtn = Instance.new("TextButton")
+flyBtn.Size = UDim2.new(1, 0, 0, 35)
+flyBtn.Position = UDim2.new(0, 0, 0, 70)
+flyBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
+flyBtn.Text = "FLY: OFF"
+flyBtn.TextColor3 = Color3.new(1,1,1)
+flyBtn.Font = Enum.Font.GothamBold
+flyBtn.Parent = setPage
+Instance.new("UICorner", flyBtn).CornerRadius = UDim.new(0, 6)
+
+-- Rejoin
+local rejoinBtn = Instance.new("TextButton")
+rejoinBtn.Size = UDim2.new(1, 0, 0, 35)
+rejoinBtn.Position = UDim2.new(0, 0, 0, 115)
+rejoinBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
+rejoinBtn.Text = "REJOIN SERVER"
+rejoinBtn.TextColor3 = Color3.new(1,1,1)
+rejoinBtn.Font = Enum.Font.GothamBold
+rejoinBtn.Parent = setPage
+Instance.new("UICorner", rejoinBtn).CornerRadius = UDim.new(0, 6)
+
+-- Simpan Config
+local saveBtn = Instance.new("TextButton")
+saveBtn.Size = UDim2.new(1, 0, 0, 35)
+saveBtn.Position = UDim2.new(0, 0, 0, 160)
+saveBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+saveBtn.Text = "SIMPAN CONFIG"
+saveBtn.TextColor3 = Color3.new(1,1,1)
+saveBtn.Font = Enum.Font.GothamBold
+saveBtn.Parent = setPage
+Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 6)
+
+-- ============ LOGIC CHECKPOINT ============
 local function render()
     for _, v in ipairs(scroll:GetChildren()) do
         if v:IsA("Frame") then v:Destroy() end
@@ -201,7 +279,7 @@ local function render()
         local pos = config.checkpoints[i]
         local row = Instance.new("Frame")
         row.Size = UDim2.new(1, -10, 0, 35)
-        row.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+        row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
         row.Parent = scroll
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
         
@@ -214,7 +292,7 @@ local function render()
         num.Parent = row
         
         local coord = Instance.new("TextLabel")
-        coord.Size = UDim2.new(0, 200, 1, 0)
+        coord.Size = UDim2.new(0, 120, 1, 0)
         coord.Position = UDim2.new(0, 40, 0, 0)
         coord.BackgroundTransparency = 1
         coord.Text = string.format("(%.0f, %.0f, %.0f)", pos.X, pos.Y, pos.Z)
@@ -226,9 +304,10 @@ local function render()
         local tpBtn = Instance.new("TextButton")
         tpBtn.Size = UDim2.new(0, 40, 1, -10)
         tpBtn.Position = UDim2.new(1, -90, 0, 5)
-        tpBtn.BackgroundColor3 = Color3.fromRGB(80, 100, 220)
+        tpBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
         tpBtn.Text = "TP"
         tpBtn.TextColor3 = Color3.new(1,1,1)
+        tpBtn.Font = Enum.Font.GothamBold
         tpBtn.Parent = row
         Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 4)
         tpBtn.MouseButton1Click:Connect(function() tpTo(pos) end)
@@ -239,6 +318,7 @@ local function render()
         delBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
         delBtn.Text = "X"
         delBtn.TextColor3 = Color3.new(1,1,1)
+        delBtn.Font = Enum.Font.GothamBold
         delBtn.Parent = row
         Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 4)
         delBtn.MouseButton1Click:Connect(function()
@@ -248,92 +328,11 @@ local function render()
     end
 end
 
--- ============ TAB 2: SETTINGS ============
-local setPage = createTab("Settings")
-
--- Speed Slider
-local spdLabel = Instance.new("TextLabel")
-spdLabel.Size = UDim2.new(1, 0, 0, 30)
-spdLabel.BackgroundTransparency = 1
-spdLabel.Text = "Kecepatan Lari: " .. config.speed
-spdLabel.TextColor3 = Color3.new(1,1,1)
-spdLabel.Font = Enum.Font.Gotham
-spdLabel.TextXAlignment = Enum.TextXAlignment.Left
-spdLabel.Parent = setPage
-
-local spdSlider = Instance.new("TextButton")
-spdSlider.Size = UDim2.new(1, 0, 0, 30)
-spdSlider.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
-spdSlider.Text = "SET SPEED (Klik: +10)"
-spdSlider.TextColor3 = Color3.new(1,1,1)
-spdSlider.Font = Enum.Font.GothamBold
-spdSlider.Parent = setPage
-Instance.new("UICorner", spdSlider).CornerRadius = UDim.new(0, 6)
-
-spdSlider.MouseButton1Click:Connect(function()
-    config.speed = config.speed + 10
-    if config.speed > 200 then config.speed = 50 end
-    spdLabel.Text = "Kecepatan Lari: " .. config.speed
-    local hum = getHum()
-    if hum then hum.WalkSpeed = config.speed end
-end)
-
--- Fly Toggle
-local flyBtn = Instance.new("TextButton")
-flyBtn.Size = UDim2.new(1, 0, 0, 40)
-flyBtn.Position = UDim2.new(0, 0, 0, 80)
-flyBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
-flyBtn.Text = "FLY: OFF"
-flyBtn.TextColor3 = Color3.new(1,1,1)
-flyBtn.Font = Enum.Font.GothamBold
-flyBtn.Parent = setPage
-Instance.new("UICorner", flyBtn).CornerRadius = UDim.new(0, 6)
-
--- Tombol Rejoin (BARU!)
-local rejoinBtn = Instance.new("TextButton")
-rejoinBtn.Size = UDim2.new(1, 0, 0, 40)
-rejoinBtn.Position = UDim2.new(0, 0, 0, 140)
-rejoinBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 250) -- Warna Biru
-rejoinBtn.Text = "REJOIN SERVER"
-rejoinBtn.TextColor3 = Color3.new(1,1,1)
-rejoinBtn.Font = Enum.Font.GothamBold
-rejoinBtn.Parent = setPage
-Instance.new("UICorner", rejoinBtn).CornerRadius = UDim.new(0, 6)
-
-rejoinBtn.MouseButton1Click:Connect(function()
-    local sistem = ReplicatedStorage:FindFirstChild("Remote")
-    if sistem then sistem = sistem:FindFirstChild("Sistem") end
-    
-    if sistem and sistem:FindFirstChild("Rejoin") then
-        -- Pake remote Mount Soreya
-        sistem.Rejoin:FireServer()
-    else
-        -- Fallback pake Roblox Teleport
-        local TeleportService = game:GetService("TeleportService")
-        pcall(function()
-            TeleportService:Teleport(game.PlaceId, LocalPlayer)
-        end)
-    end
-end)
-
--- Simpan Config
-local saveBtn = Instance.new("TextButton")
-saveBtn.Size = UDim2.new(1, 0, 0, 40)
-saveBtn.Position = UDim2.new(0, 0, 0, 200)
-saveBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 120)
-saveBtn.Text = "Simpan Config ke PC"
-saveBtn.TextColor3 = Color3.new(1,1,1)
-saveBtn.Font = Enum.Font.GothamBold
-saveBtn.Parent = setPage
-Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 6)
-
--- ============ LOGIC ============
 addBtn.MouseButton1Click:Connect(function()
     local hrp = getHRP()
     if hrp then
         local nextNum = 0
         while config.checkpoints[nextNum] do nextNum += 1 end
-        if nextNum > 20 then return print("CP Penuh!") end
         config.checkpoints[nextNum] = hrp.Position
         render()
     end
@@ -342,7 +341,7 @@ end)
 autoBtn.MouseButton1Click:Connect(function()
     config.autoSummit = not config.autoSummit
     if config.autoSummit then
-        autoBtn.Text = "STOP AUTO TP"
+        autoBtn.Text = "Auto TP: ON"
         autoBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
         task.spawn(function()
             while config.autoSummit do
@@ -357,8 +356,27 @@ autoBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        autoBtn.Text = "MULAI AUTO TP"
+        autoBtn.Text = "Auto TP: OFF"
         autoBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
+    end
+end)
+
+-- ============ LOGIC SETTINGS ============
+spdBtn.MouseButton1Click:Connect(function()
+    config.speed = config.speed + 10
+    if config.speed > 200 then config.speed = 50 end
+    spdLabel.Text = "Kecepatan: " .. config.speed
+    local hum = getHum()
+    if hum then hum.WalkSpeed = config.speed end
+end)
+
+rejoinBtn.MouseButton1Click:Connect(function()
+    local sistem = ReplicatedStorage:FindFirstChild("Remote")
+    if sistem then sistem = sistem:FindFirstChild("Sistem") end
+    if sistem and sistem:FindFirstChild("Rejoin") then
+        sistem.Rejoin:FireServer()
+    else
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
     end
 end)
 
@@ -370,33 +388,31 @@ saveBtn.MouseButton1Click:Connect(function()
         end
         pcall(function()
             writefile(CONFIG_FILE, HttpService:JSONEncode(data))
-            print("[Config] Berhasil disimpan!")
+            saveBtn.Text = "TERSIMPAN!"
+            task.wait(2)
+            saveBtn.Text = "SIMPAN CONFIG"
         end)
     end
 end)
 
--- ============ FLY LOGIC ============
+-- Fly Logic
 local flying = false
 local flyConnection, bv, bg
-
 flyBtn.MouseButton1Click:Connect(function()
     flying = not flying
     if flying then
         flyBtn.Text = "FLY: ON"
-        flyBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 120)
-        
+        flyBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
         local hrp = getHRP()
         if hrp then
             bv = Instance.new("BodyVelocity")
             bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
             bv.Velocity = Vector3.zero
             bv.Parent = hrp
-            
             bg = Instance.new("BodyGyro")
             bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
             bg.P = 3000
             bg.Parent = hrp
-            
             flyConnection = RunService.RenderStepped:Connect(function()
                 if not getHRP() then return end
                 local cam = workspace.CurrentCamera
@@ -407,7 +423,6 @@ flyBtn.MouseButton1Click:Connect(function()
                 if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
                 if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.yAxis end
                 if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.yAxis end
-                
                 if dir.Magnitude > 0 then dir = dir.Unit * config.flySpeed end
                 bv.Velocity = dir
                 bg.CFrame = cam.CFrame
@@ -415,25 +430,25 @@ flyBtn.MouseButton1Click:Connect(function()
         end
     else
         flyBtn.Text = "FLY: OFF"
-        flyBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
+        flyBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
         if flyConnection then flyConnection:Disconnect() end
         if bv then bv:Destroy() end
         if bg then bg:Destroy() end
     end
 end)
 
--- Hotkeys
+-- Hotkey Buka/Tutup
 UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.X then
         mainFrame.Visible = not mainFrame.Visible
     end
 end)
-
 toggleBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
 end)
 
--- Buka Tab Pertama
+-- Buka Tab Pertama by Default
 tabs[sidebar:GetChildren()[1]].Visible = true
+TweenService:Create(sidebar:GetChildren()[1], TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 65), TextColor3 = Color3.new(1,1,1)}):Play()
 render()
