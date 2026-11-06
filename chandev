@@ -1,4 +1,4 @@
--- CHANN DEV | Windows-Style Dashboard
+-- CHANN DEV | Ultimate Dashboard (Toggle Summit + Custom TP + Config Manager)
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -12,28 +12,42 @@ local TweenService = game:GetService("TweenService")
 local oldGui = CoreGui:FindFirstChild("ChannDev_Dashboard")
 if oldGui then oldGui:Destroy() end
 
--- ============ CONFIG ============
+-- ============ DEFAULT CONFIG ============
 local config = {
-    speed = 50,
-    flySpeed = 60,
-    tpSpeed = 1.0,
+    speed = 1000,
+    flySpeed = 300,
+    tpSpeed = 1.5,
+    antiAfk = true,
     autoSummit = false,
-    checkpoints = {}
+    -- Data Bawaan Mount Soreya
+    summitCPs = {
+        [0] = Vector3.new(462.22, 444.92, -8894.67),
+        [1] = Vector3.new(463.75, 455.33, -8945.72),
+        [2] = Vector3.new(449.5, 500, -9568),
+        [3] = Vector3.new(398.27, 640, -10113.52),
+        [4] = Vector3.new(486.5, 649, -10680.99),
+        [5] = Vector3.new(1088.5, 735.5, -11156.49),
+        [6] = Vector3.new(973.68, 746, -11808.9),
+        [7] = Vector3.new(391.5, 896, -11839),
+        [8] = Vector3.new(-325.87, 858.78, -11738.48),
+        [9] = Vector3.new(-869.7, 864.09, -11737.4),
+        [10] = Vector3.new(-1281.52, 868.23, -12093.62),
+        [11] = Vector3.new(-1310.59, 900.25, -12834.41),
+        [12] = Vector3.new(-2326.68, 924.82, -12672.85),
+        [13] = Vector3.new(-2309.1, 928.09, -11856.9),
+        [14] = Vector3.new(-2444.75, 972.77, -11057.5),
+        [15] = Vector3.new(-3480.15, 992.51, -11014.88),
+        [16] = Vector3.new(-4225.69, 1012.0, -11018.0),
+        [17] = Vector3.new(-4650.55, 1091.4, -11665.25),
+        [18] = Vector3.new(-5543.9, 1112.61, -11651.75),
+        [19] = Vector3.new(-6766.57, 1106.15, -11507.13),
+        [20] = Vector3.new(-6761.15, 1114.65, -10800.55),
+        [21] = Vector3.new(-6766.88, 1313.09, -10082.26), -- Summit
+        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)   -- BC
+    },
+    -- Data Manual Lo
+    customSpots = {}
 }
-local CONFIG_FILE = "ChannDev_Config.json"
-
-if isfile and isfile(CONFIG_FILE) then
-    local success, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
-    if success and data then
-        if data.checkpoints then
-            for k, v in pairs(data.checkpoints) do
-                config.checkpoints[tonumber(k)] = Vector3.new(v.X, v.Y, v.Z)
-            end
-        end
-        if data.speed then config.speed = data.speed end
-        if data.tpSpeed then config.tpSpeed = data.tpSpeed end
-    end
-end
 
 local function getHRP() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") end
 local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
@@ -50,15 +64,6 @@ local function tpTo(pos)
         if ResetCheckpoint then pcall(function() ResetCheckpoint:InvokeServer() end) end
     end
 end
-
--- Anti AFK
-task.spawn(function()
-    while task.wait(60) do
-        if LocalPlayer.Character then
-            LocalPlayer.Character:MoveTo(LocalPlayer.Character.HumanoidRootPart.Position)
-        end
-    end
-end)
 
 -- ============ DRAG LOGIC ============
 local function makeDraggable(frame, dragArea)
@@ -92,7 +97,6 @@ gui.Name = "ChannDev_Dashboard"
 gui.Parent = CoreGui
 gui.ResetOnSpawn = false
 
--- Floating Logo (Hide Mode)
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(0, 50, 0, 50)
 toggleBtn.Position = UDim2.new(0, 20, 0, 20)
@@ -104,7 +108,6 @@ toggleBtn.TextSize = 22
 toggleBtn.Parent = gui
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1,0)
 
--- MAIN WINDOW
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 600, 0, 420)
 mainFrame.Position = UDim2.new(0.5, -300, 0.5, -210)
@@ -114,7 +117,6 @@ mainFrame.Parent = gui
 mainFrame.Visible = false
 Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
 
--- Top Bar
 local topBar = Instance.new("Frame")
 topBar.Size = UDim2.new(1, 0, 0, 50)
 topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
@@ -132,7 +134,6 @@ title.TextSize = 16
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = topBar
 
--- Tombol Minimize
 local minBtn = Instance.new("TextButton")
 minBtn.Size = UDim2.new(0, 35, 0, 35)
 minBtn.Position = UDim2.new(1, -85, 0, 7)
@@ -144,7 +145,6 @@ minBtn.TextSize = 20
 minBtn.Parent = topBar
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 6)
 
--- Tombol Close
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 35, 0, 35)
 closeBtn.Position = UDim2.new(1, -45, 0, 7)
@@ -155,7 +155,6 @@ closeBtn.Font = Enum.Font.GothamBold
 closeBtn.Parent = topBar
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
 
--- ============ SIDEBAR ============
 local sidebar = Instance.new("Frame")
 sidebar.Size = UDim2.new(0, 150, 1, -50)
 sidebar.Position = UDim2.new(0, 0, 0, 50)
@@ -168,7 +167,6 @@ content.Position = UDim2.new(0, 155, 0, 55)
 content.BackgroundTransparency = 1
 content.Parent = mainFrame
 
--- Tab Manager
 local tabs = {}
 local function createSidebarTab(name, index)
     local btn = Instance.new("TextButton")
@@ -206,8 +204,8 @@ local function createSidebarTab(name, index)
     return page
 end
 
--- ============ TAB 1: CHECKPOINT TP ============
-local cpPage = createSidebarTab("Checkpoint TP", 0)
+-- ============ TAB 1: CHECKPOINT (Auto Summit Toggle) ============
+local cpPage = createSidebarTab("Auto Summit", 0)
 local scroll = Instance.new("ScrollingFrame")
 scroll.Size = UDim2.new(1, -20, 1, -60)
 scroll.Position = UDim2.new(0, 10, 0, 10)
@@ -216,84 +214,70 @@ scroll.Parent = cpPage
 Instance.new("UIListLayout", scroll)
 
 local cpBottomFrame = Instance.new("Frame")
-cpBottomFrame.Size = UDim2.new(1, 0, 0, 40)
-cpBottomFrame.Position = UDim2.new(0, 0, 1, -40)
+cpBottomFrame.Size = UDim2.new(1, 0, 0, 45)
+cpBottomFrame.Position = UDim2.new(0, 0, 1, -45)
 cpBottomFrame.BackgroundTransparency = 1
 cpBottomFrame.Parent = cpPage
 
-local addBtn = Instance.new("TextButton")
-addBtn.Size = UDim2.new(0.48, 0, 1, 0)
-addBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
-addBtn.Text = "+ Simpan Posisi"
-addBtn.TextColor3 = Color3.new(1,1,1)
-addBtn.Font = Enum.Font.GothamBold
-addBtn.Parent = cpBottomFrame
-Instance.new("UICorner", addBtn).CornerRadius = UDim.new(0, 6)
-
 local autoBtn = Instance.new("TextButton")
-autoBtn.Size = UDim2.new(0.48, 0, 1, 0)
-autoBtn.Position = UDim2.new(0.52, 0, 0, 0)
+autoBtn.Size = UDim2.new(1, 0, 1, 0)
 autoBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
-autoBtn.Text = "Auto TP: OFF"
+autoBtn.Text = "AUTO SUMMIT: OFF"
 autoBtn.TextColor3 = Color3.new(1,1,1)
 autoBtn.Font = Enum.Font.GothamBold
 autoBtn.Parent = cpBottomFrame
 Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 6)
 
--- ============ TAB 2: TELEPORTASI (BARU) ============
+-- ============ TAB 2: TELEPORTASI (Custom Spots) ============
 local tpPage = createSidebarTab("Teleportasi", 1)
 local tpScroll = Instance.new("ScrollingFrame")
-tpScroll.Size = UDim2.new(1, -20, 1, -20)
+tpScroll.Size = UDim2.new(1, -20, 1, -60)
 tpScroll.Position = UDim2.new(0, 10, 0, 10)
 tpScroll.BackgroundTransparency = 1
 tpScroll.Parent = tpPage
 Instance.new("UIListLayout", tpScroll)
 
--- ============ TAB 3: SETTINGS ============
-local setPage = createSidebarTab("Settings & Player", 2)
+local tpBottomFrame = Instance.new("Frame")
+tpBottomFrame.Size = UDim2.new(1, 0, 0, 45)
+tpBottomFrame.Position = UDim2.new(0, 0, 1, -45)
+tpBottomFrame.BackgroundTransparency = 1
+tpBottomFrame.Parent = tpPage
 
-local spdLabel = Instance.new("TextLabel")
-spdLabel.Size = UDim2.new(1, 0, 0, 25)
-spdLabel.BackgroundTransparency = 1
-spdLabel.Text = "Kecepatan Lari: " .. config.speed
-spdLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-spdLabel.Font = Enum.Font.Gotham
-spdLabel.TextXAlignment = Enum.TextXAlignment.Left
-spdLabel.Parent = setPage
+local addSpotBtn = Instance.new("TextButton")
+addSpotBtn.Size = UDim2.new(1, 0, 1, 0)
+addSpotBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+addSpotBtn.Text = "+ Simpan Posisi Ini"
+addSpotBtn.TextColor3 = Color3.new(1,1,1)
+addSpotBtn.Font = Enum.Font.GothamBold
+addSpotBtn.Parent = tpBottomFrame
+Instance.new("UICorner", addSpotBtn).CornerRadius = UDim.new(0, 6)
 
-local spdBtn = Instance.new("TextButton")
-spdBtn.Size = UDim2.new(1, 0, 0, 35)
-spdBtn.Position = UDim2.new(0, 0, 0, 25)
-spdBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
-spdBtn.Text = "SET SPEED (+10)"
-spdBtn.TextColor3 = Color3.new(1,1,1)
-spdBtn.Font = Enum.Font.GothamBold
-spdBtn.Parent = setPage
-Instance.new("UICorner", spdBtn).CornerRadius = UDim.new(0, 6)
+-- ============ TAB 3: SETTINGS & CONFIG ============
+local setPage = createSidebarTab("Settings & Config", 2)
 
+-- TP Speed
 local tpSpdLabel = Instance.new("TextLabel")
 tpSpdLabel.Size = UDim2.new(1, 0, 0, 25)
-tpSpdLabel.Position = UDim2.new(0, 0, 0, 70)
 tpSpdLabel.BackgroundTransparency = 1
-tpSpdLabel.Text = "Kecepatan TP: " .. config.tpSpeed .. "s"
+tpSpdLabel.Text = "Kecepatan Auto Summit: " .. config.tpSpeed .. "s"
 tpSpdLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 tpSpdLabel.Font = Enum.Font.Gotham
 tpSpdLabel.TextXAlignment = Enum.TextXAlignment.Left
 tpSpdLabel.Parent = setPage
 
 local tpSpdBtn = Instance.new("TextButton")
-tpSpdBtn.Size = UDim2.new(1, 0, 0, 35)
-tpSpdBtn.Position = UDim2.new(0, 0, 0, 95)
+tpSpdBtn.Size = UDim2.new(0.5, -5, 0, 30)
+tpSpdBtn.Position = UDim2.new(0, 0, 0, 25)
 tpSpdBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
-tpSpdBtn.Text = "SET TP SPEED (Ubah)"
+tpSpdBtn.Text = "Ubah TP Speed"
 tpSpdBtn.TextColor3 = Color3.new(1,1,1)
 tpSpdBtn.Font = Enum.Font.GothamBold
 tpSpdBtn.Parent = setPage
 Instance.new("UICorner", tpSpdBtn).CornerRadius = UDim.new(0, 6)
 
 local flyBtn = Instance.new("TextButton")
-flyBtn.Size = UDim2.new(1, 0, 0, 35)
-flyBtn.Position = UDim2.new(0, 0, 0, 145)
+flyBtn.Size = UDim2.new(0.5, -5, 0, 30)
+flyBtn.Position = UDim2.new(0.5, 5, 0, 25)
 flyBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
 flyBtn.Text = "FLY: OFF"
 flyBtn.TextColor3 = Color3.new(1,1,1)
@@ -301,9 +285,70 @@ flyBtn.Font = Enum.Font.GothamBold
 flyBtn.Parent = setPage
 Instance.new("UICorner", flyBtn).CornerRadius = UDim.new(0, 6)
 
+-- CONFIG MANAGER (Save, Load, Delete)
+local configTitle = Instance.new("TextLabel")
+configTitle.Size = UDim2.new(1, 0, 0, 25)
+configTitle.Position = UDim2.new(0, 0, 0, 70)
+configTitle.BackgroundTransparency = 1
+configTitle.Text = "--- CONFIG MANAGER ---"
+configTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+configTitle.Font = Enum.Font.GothamBold
+configTitle.Parent = setPage
+
+local configInput = Instance.new("TextBox")
+configInput.Size = UDim2.new(1, 0, 0, 30)
+configInput.Position = UDim2.new(0, 0, 0, 95)
+configInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+configInput.PlaceholderText = "Nama Config (cth: CP_Utama)"
+configInput.Text = "Config_1"
+configInput.TextColor3 = Color3.new(1,1,1)
+configInput.Parent = setPage
+Instance.new("UICorner", configInput).CornerRadius = UDim.new(0, 6)
+
+local saveCfgBtn = Instance.new("TextButton")
+saveCfgBtn.Size = UDim2.new(0.32, -5, 0, 30)
+saveCfgBtn.Position = UDim2.new(0, 0, 0, 135)
+saveCfgBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+saveCfgBtn.Text = "Save"
+saveCfgBtn.TextColor3 = Color3.new(1,1,1)
+saveCfgBtn.Font = Enum.Font.GothamBold
+saveCfgBtn.Parent = setPage
+Instance.new("UICorner", saveCfgBtn).CornerRadius = UDim.new(0, 6)
+
+local loadCfgBtn = Instance.new("TextButton")
+loadCfgBtn.Size = UDim2.new(0.32, -5, 0, 30)
+loadCfgBtn.Position = UDim2.new(0.34, 0, 0, 135)
+loadCfgBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
+loadCfgBtn.Text = "Load"
+loadCfgBtn.TextColor3 = Color3.new(1,1,1)
+loadCfgBtn.Font = Enum.Font.GothamBold
+loadCfgBtn.Parent = setPage
+Instance.new("UICorner", loadCfgBtn).CornerRadius = UDim.new(0, 6)
+
+local delCfgBtn = Instance.new("TextButton")
+delCfgBtn.Size = UDim2.new(0.32, -5, 0, 30)
+delCfgBtn.Position = UDim2.new(0.68, 0, 0, 135)
+delCfgBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
+delCfgBtn.Text = "Delete"
+delCfgBtn.TextColor3 = Color3.new(1,1,1)
+delCfgBtn.Font = Enum.Font.GothamBold
+delCfgBtn.Parent = setPage
+Instance.new("UICorner", delCfgBtn).CornerRadius = UDim.new(0, 6)
+
+-- ANTI AFK & REJOIN
+local afkBtn = Instance.new("TextButton")
+afkBtn.Size = UDim2.new(0.5, -5, 0, 30)
+afkBtn.Position = UDim2.new(0, 0, 0, 185)
+afkBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+afkBtn.Text = "ANTI AFK: ON"
+afkBtn.TextColor3 = Color3.new(1,1,1)
+afkBtn.Font = Enum.Font.GothamBold
+afkBtn.Parent = setPage
+Instance.new("UICorner", afkBtn).CornerRadius = UDim.new(0, 6)
+
 local rejoinBtn = Instance.new("TextButton")
-rejoinBtn.Size = UDim2.new(1, 0, 0, 35)
-rejoinBtn.Position = UDim2.new(0, 0, 0, 190)
+rejoinBtn.Size = UDim2.new(0.5, -5, 0, 30)
+rejoinBtn.Position = UDim2.new(0.5, 5, 0, 185)
 rejoinBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
 rejoinBtn.Text = "REJOIN SERVER"
 rejoinBtn.TextColor3 = Color3.new(1,1,1)
@@ -311,119 +356,192 @@ rejoinBtn.Font = Enum.Font.GothamBold
 rejoinBtn.Parent = setPage
 Instance.new("UICorner", rejoinBtn).CornerRadius = UDim.new(0, 6)
 
-local saveBtn = Instance.new("TextButton")
-saveBtn.Size = UDim2.new(1, 0, 0, 35)
-saveBtn.Position = UDim2.new(0, 0, 0, 235)
-saveBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
-saveBtn.Text = "SIMPAN CONFIG"
-saveBtn.TextColor3 = Color3.new(1,1,1)
-saveBtn.Font = Enum.Font.GothamBold
-saveBtn.Parent = setPage
-Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 6)
-
--- ============ LOGIC ============
+-- ============ LOGIC & RENDER ============
 local function render()
+    -- Render Auto Summit List
     for _, v in ipairs(scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
-    for _, v in ipairs(tpScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-    
-    local keys = {}
-    for k, _ in pairs(config.checkpoints) do table.insert(keys, k) end
-    table.sort(keys)
-
-    for _, i in ipairs(keys) do
-        local pos = config.checkpoints[i]
-        
-        -- Render CP List
+    local sKeys = {}
+    for k, _ in pairs(config.summitCPs) do table.insert(sKeys, k) end
+    table.sort(sKeys)
+    for _, i in ipairs(sKeys) do
+        local pos = config.summitCPs[i]
         local row = Instance.new("Frame")
-        row.Size = UDim2.new(1, -10, 0, 35)
+        row.Size = UDim2.new(1, -10, 0, 30)
         row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
         row.Parent = scroll
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
+        
+        local nameTxt = (i == 0 and "Basecamp") or (i == 21 and "Summit") or (i == 22 and "Balik BC") or "CP "..i
+        local num = Instance.new("TextLabel")
+        num.Size = UDim2.new(1, 0, 1, 0)
+        num.Position = UDim2.new(0, 10, 0, 0)
+        num.BackgroundTransparency = 1
+        num.Text = nameTxt .. "  |  ("..math.floor(pos.X)..", "..math.floor(pos.Y)..", "..math.floor(pos.Z)..")"
+        num.TextColor3 = Color3.new(1,1,1)
+        num.Font = Enum.Font.Gotham
+        num.TextSize = 12
+        num.TextXAlignment = Enum.TextXAlignment.Left
+        num.Parent = row
+    end
+
+    -- Render Custom TP List
+    for _, v in ipairs(tpScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    local cKeys = {}
+    for k, _ in pairs(config.customSpots) do table.insert(cKeys, k) end
+    table.sort(cKeys)
+    for _, i in ipairs(cKeys) do
+        local pos = config.customSpots[i]
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, -10, 0, 35)
+        row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+        row.Parent = tpScroll
+        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
+        
         local num = Instance.new("TextLabel")
         num.Size = UDim2.new(0, 40, 1, 0)
         num.BackgroundTransparency = 1
-        num.Text = "CP"..i
+        num.Text = "Spot "..i
         num.TextColor3 = Color3.new(1,1,1)
         num.Font = Enum.Font.GothamBold
+        num.TextSize = 12
         num.Parent = row
-        local coord = Instance.new("TextLabel")
-        coord.Size = UDim2.new(0, 120, 1, 0)
-        coord.Position = UDim2.new(0, 40, 0, 0)
-        coord.BackgroundTransparency = 1
-        coord.Text = string.format("(%.0f, %.0f, %.0f)", pos.X, pos.Y, pos.Z)
-        coord.TextColor3 = Color3.fromRGB(150, 150, 150)
-        coord.Font = Enum.Font.Code
-        coord.TextXAlignment = Enum.TextXAlignment.Left
-        coord.Parent = row
-        local delBtn = Instance.new("TextButton")
-        delBtn.Size = UDim2.new(0, 40, 1, -10)
-        delBtn.Position = UDim2.new(1, -45, 0, 5)
-        delBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
-        delBtn.Text = "X"
-        delBtn.TextColor3 = Color3.new(1,1,1)
-        delBtn.Font = Enum.Font.GothamBold
-        delBtn.Parent = row
-        Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 4)
-        delBtn.MouseButton1Click:Connect(function() config.checkpoints[i] = nil render() end)
-
-        -- Render Quick TP Button
-        local tpBtn = Instance.new("TextButton")
-        tpBtn.Size = UDim2.new(1, -10, 0, 35)
-        tpBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
-        tpBtn.Text = "Teleport ke CP" .. i
-        tpBtn.TextColor3 = Color3.new(1,1,1)
-        tpBtn.Font = Enum.Font.GothamBold
-        tpBtn.Parent = tpScroll
-        Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 4)
-        tpBtn.MouseButton1Click:Connect(function() tpTo(pos) end)
+        
+        local tpB = Instance.new("TextButton")
+        tpB.Size = UDim2.new(0, 50, 1, -10)
+        tpB.Position = UDim2.new(1, -100, 0, 5)
+        tpB.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
+        tpB.Text = "TP"
+        tpB.TextColor3 = Color3.new(1,1,1)
+        tpB.Font = Enum.Font.GothamBold
+        tpB.Parent = row
+        Instance.new("UICorner", tpB).CornerRadius = UDim.new(0, 4)
+        tpB.MouseButton1Click:Connect(function() tpTo(pos) end)
+        
+        local delB = Instance.new("TextButton")
+        delB.Size = UDim2.new(0, 40, 1, -10)
+        delB.Position = UDim2.new(1, -45, 0, 5)
+        delB.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
+        delB.Text = "X"
+        delB.TextColor3 = Color3.new(1,1,1)
+        delB.Font = Enum.Font.GothamBold
+        delB.Parent = row
+        Instance.new("UICorner", delB).CornerRadius = UDim.new(0, 4)
+        delB.MouseButton1Click:Connect(function()
+            table.remove(config.customSpots, i)
+            render()
+        end)
     end
 end
 
-addBtn.MouseButton1Click:Connect(function()
-    local hrp = getHRP()
-    if hrp then
-        local nextNum = 0
-        while config.checkpoints[nextNum] do nextNum += 1 end
-        config.checkpoints[nextNum] = hrp.Position
-        render()
-    end
-end)
-
+-- Logic Auto Summit Toggle
 autoBtn.MouseButton1Click:Connect(function()
     config.autoSummit = not config.autoSummit
     if config.autoSummit then
-        autoBtn.Text = "Auto TP: ON"
-        autoBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+        autoBtn.Text = "AUTO SUMMIT: ON"
+        autoBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
         task.spawn(function()
             while config.autoSummit do
-                for i = 0, 20 do
+                for i = 0, 22 do
                     if not config.autoSummit then break end
-                    if config.checkpoints[i] then
-                        tpTo(config.checkpoints[i])
+                    if config.summitCPs[i] then
+                        tpTo(config.summitCPs[i])
+                        local hum = getHum()
+                        if hum then hum.WalkSpeed = config.speed end
                         task.wait(config.tpSpeed)
                     end
                 end
-                if config.checkpoints[0] then tpTo(config.checkpoints[0]) end
+                if config.autoSummit and config.summitCPs[0] then 
+                    tpTo(config.summitCPs[0])
+                    print("[AUTO] Balik ke Basecamp, ngulang...")
+                end
+                task.wait(2)
             end
         end)
     else
-        autoBtn.Text = "Auto TP: OFF"
+        autoBtn.Text = "AUTO SUMMIT: OFF"
         autoBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
     end
 end)
 
-spdBtn.MouseButton1Click:Connect(function()
-    config.speed = config.speed + 10
-    if config.speed > 200 then config.speed = 50 end
-    spdLabel.Text = "Kecepatan Lari: " .. config.speed
-    local hum = getHum()
-    if hum then hum.WalkSpeed = config.speed end
+-- Logic Custom Spots
+addSpotBtn.MouseButton1Click:Connect(function()
+    local hrp = getHRP()
+    if hrp then
+        table.insert(config.customSpots, hrp.Position)
+        render()
+    end
 end)
 
+-- Logic Config
+saveCfgBtn.MouseButton1Click:Connect(function()
+    if writefile then
+        local fileName = configInput.Text .. ".json"
+        local data = { 
+            speed = config.speed, 
+            tpSpeed = config.tpSpeed,
+            customSpots = {}
+        }
+        for i, v in ipairs(config.customSpots) do
+            data.customSpots[i] = {X = v.X, Y = v.Y, Z = v.Z}
+        end
+        pcall(function()
+            writefile(fileName, HttpService:JSONEncode(data))
+            saveCfgBtn.Text = "OK!"
+            task.wait(1)
+            saveCfgBtn.Text = "Save"
+        end)
+    end
+end)
+
+loadCfgBtn.MouseButton1Click:Connect(function()
+    if isfile then
+        local fileName = configInput.Text .. ".json"
+        if isfile(fileName) then
+            local success, data = pcall(function() return HttpService:JSONDecode(readfile(fileName)) end)
+            if success and data then
+                if data.speed then config.speed = data.speed end
+                if data.tpSpeed then config.tpSpeed = data.tpSpeed end
+                if data.customSpots then
+                    config.customSpots = {}
+                    for i, v in pairs(data.customSpots) do
+                        config.customSpots[tonumber(i)] = Vector3.new(v.X, v.Y, v.Z)
+                    end
+                end
+                render()
+                loadCfgBtn.Text = "Loaded!"
+                task.wait(1)
+                loadCfgBtn.Text = "Load"
+            end
+        end
+    end
+end)
+
+delCfgBtn.MouseButton1Click:Connect(function()
+    if delfile then
+        local fileName = configInput.Text .. ".json"
+        pcall(function() delfile(fileName) end)
+        delCfgBtn.Text = "Deleted!"
+        task.wait(1)
+        delCfgBtn.Text = "Delete"
+    end
+end)
+
+-- Logic Speed & Fly & AFK
 tpSpdBtn.MouseButton1Click:Connect(function()
     config.tpSpeed = config.tpSpeed + 0.5
     if config.tpSpeed > 3.0 then config.tpSpeed = 0.5 end
-    tpSpdLabel.Text = "Kecepatan TP: " .. config.tpSpeed .. "s"
+    tpSpdLabel.Text = "Kecepatan Auto Summit: " .. config.tpSpeed .. "s"
+end)
+
+afkBtn.MouseButton1Click:Connect(function()
+    config.antiAfk = not config.antiAfk
+    if config.antiAfk then
+        afkBtn.Text = "ANTI AFK: ON"
+        afkBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+    else
+        afkBtn.Text = "ANTI AFK: OFF"
+        afkBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+    end
 end)
 
 rejoinBtn.MouseButton1Click:Connect(function()
@@ -436,16 +554,12 @@ rejoinBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-saveBtn.MouseButton1Click:Connect(function()
-    if writefile then
-        local data = { speed = config.speed, tpSpeed = config.tpSpeed, checkpoints = {} }
-        for k, v in pairs(config.checkpoints) do data.checkpoints[tostring(k)] = {X = v.X, Y = v.Y, Z = v.Z} end
-        pcall(function()
-            writefile(CONFIG_FILE, HttpService:JSONEncode(data))
-            saveBtn.Text = "TERSIMPAN!"
-            task.wait(2)
-            saveBtn.Text = "SIMPAN CONFIG"
-        end)
+-- ANTI AFK LOOP
+task.spawn(function()
+    while task.wait(60) do
+        if config.antiAfk and LocalPlayer.Character then
+            LocalPlayer.Character:MoveTo(LocalPlayer.Character.HumanoidRootPart.Position)
+        end
     end
 end)
 
@@ -491,12 +605,11 @@ flyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- BUKA/TUTUP LOGIC
+-- TUTUP/BUKA
 minBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 toggleBtn.MouseButton1Click:Connect(function() mainFrame.Visible = not mainFrame.Visible end)
 
--- Buka Tab Pertama by Default
 tabs[sidebar:GetChildren()[1]].Visible = true
 TweenService:Create(sidebar:GetChildren()[1], TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 65), TextColor3 = Color3.new(1,1,1)}):Play()
 render()
