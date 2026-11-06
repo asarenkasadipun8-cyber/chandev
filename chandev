@@ -1,4 +1,4 @@
--- CHANN DEV | Premium Dashboard
+-- CHANN DEV | Premium Dashboard (Rejoin Added)
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -289,10 +289,37 @@ flyBtn.Font = Enum.Font.GothamBold
 flyBtn.Parent = setPage
 Instance.new("UICorner", flyBtn).CornerRadius = UDim.new(0, 6)
 
+-- Tombol Rejoin (BARU!)
+local rejoinBtn = Instance.new("TextButton")
+rejoinBtn.Size = UDim2.new(1, 0, 0, 40)
+rejoinBtn.Position = UDim2.new(0, 0, 0, 140)
+rejoinBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 250) -- Warna Biru
+rejoinBtn.Text = "REJOIN SERVER"
+rejoinBtn.TextColor3 = Color3.new(1,1,1)
+rejoinBtn.Font = Enum.Font.GothamBold
+rejoinBtn.Parent = setPage
+Instance.new("UICorner", rejoinBtn).CornerRadius = UDim.new(0, 6)
+
+rejoinBtn.MouseButton1Click:Connect(function()
+    local sistem = ReplicatedStorage:FindFirstChild("Remote")
+    if sistem then sistem = sistem:FindFirstChild("Sistem") end
+    
+    if sistem and sistem:FindFirstChild("Rejoin") then
+        -- Pake remote Mount Soreya
+        sistem.Rejoin:FireServer()
+    else
+        -- Fallback pake Roblox Teleport
+        local TeleportService = game:GetService("TeleportService")
+        pcall(function()
+            TeleportService:Teleport(game.PlaceId, LocalPlayer)
+        end)
+    end
+end)
+
 -- Simpan Config
 local saveBtn = Instance.new("TextButton")
 saveBtn.Size = UDim2.new(1, 0, 0, 40)
-saveBtn.Position = UDim2.new(0, 0, 0, 140)
+saveBtn.Position = UDim2.new(0, 0, 0, 200)
 saveBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 120)
 saveBtn.Text = "Simpan Config ke PC"
 saveBtn.TextColor3 = Color3.new(1,1,1)
