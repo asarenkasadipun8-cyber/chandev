@@ -1,4 +1,4 @@
--- CHANN DEV | Ultra Premium Dashboard (Fix Teleport List)
+-- CHANN DEV | Ultimate Premium Dashboard (Stable)
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -8,6 +8,7 @@ local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 
 local oldGui = CoreGui:FindFirstChild("ChannDev_Premium")
 if oldGui then oldGui:Destroy() end
@@ -19,6 +20,7 @@ local config = {
     tpSpeed = 1.5,
     antiAfk = true,
     autoSummit = false,
+    flying = false,
     summitCPs = {
         [0] = Vector3.new(462.22, 444.92, -8894.67),
         [1] = Vector3.new(463.75, 455.33, -8945.72),
@@ -41,8 +43,8 @@ local config = {
         [18] = Vector3.new(-5543.9, 1112.61, -11651.75),
         [19] = Vector3.new(-6766.57, 1106.15, -11507.13),
         [20] = Vector3.new(-6761.15, 1114.65, -10800.55),
-        [21] = Vector3.new(-6766.88, 1313.09, -10082.26), -- Summit
-        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)   -- BC
+        [21] = Vector3.new(-6766.88, 1313.09, -10082.26),
+        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)
     },
     customSpots = {}
 }
@@ -63,7 +65,58 @@ local function tpTo(pos)
     end
 end
 
--- ============ DRAG LOGIC ============
+-- ============ UI SETUP ============
+local gui = Instance.new("ScreenGui")
+gui.Name = "ChannDev_Premium"
+gui.Parent = CoreGui
+gui.ResetOnSpawn = false
+
+-- Fungsi Notifikasi
+local function notify(titleText, descText)
+    local notif = Instance.new("Frame")
+    notif.Size = UDim2.new(0, 250, 0, 60)
+    notif.Position = UDim2.new(1, 20, 0, 20)
+    notif.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    notif.Parent = gui
+    Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 8)
+    
+    local stroke = Instance.new("UIStroke", notif)
+    stroke.Color = Color3.fromRGB(130, 60, 200)
+    stroke.Thickness = 2
+    
+    local t1 = Instance.new("TextLabel")
+    t1.Size = UDim2.new(1, -10, 0, 25)
+    t1.Position = UDim2.new(0, 10, 0, 5)
+    t1.BackgroundTransparency = 1
+    t1.Text = titleText
+    t1.TextColor3 = Color3.fromRGB(130, 60, 200)
+    t1.Font = Enum.Font.GothamBold
+    t1.TextSize = 14
+    t1.TextXAlignment = Enum.TextXAlignment.Left
+    t1.Parent = notif
+    
+    local t2 = Instance.new("TextLabel")
+    t2.Size = UDim2.new(1, -10, 0, 25)
+    t2.Position = UDim2.new(0, 10, 0, 25)
+    t2.BackgroundTransparency = 1
+    t2.Text = descText
+    t2.TextColor3 = Color3.fromRGB(200, 200, 200)
+    t2.Font = Enum.Font.Gotham
+    t2.TextSize = 12
+    t2.TextXAlignment = Enum.TextXAlignment.Left
+    t2.Parent = notif
+
+    TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(1, -270, 0, 20)}):Play()
+    
+    task.delay(3, function()
+        local tw = TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 20, 0, 20)})
+        tw:Play()
+        tw.Completed:Wait()
+        notif:Destroy()
+    end)
+end
+
+-- Drag Logic
 local function makeDraggable(frame, dragArea)
     local dragging, dragInput, dragStart, startPos
     dragArea.InputBegan:Connect(function(input)
@@ -88,12 +141,6 @@ local function makeDraggable(frame, dragArea)
         end
     end)
 end
-
--- ============ UI SETUP ============
-local gui = Instance.new("ScreenGui")
-gui.Name = "ChannDev_Premium"
-gui.Parent = CoreGui
-gui.ResetOnSpawn = false
 
 -- Logo C
 local toggleBtn = Instance.new("TextButton")
@@ -126,7 +173,6 @@ bgGradient.Color = ColorSequence.new{
 bgGradient.Rotation = 45
 bgGradient.Parent = mainFrame
 
--- Top Bar
 local topBar = Instance.new("Frame")
 topBar.Size = UDim2.new(1, 0, 0, 55)
 topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
@@ -395,10 +441,8 @@ end)
 delBtn.Size = UDim2.new(0.32, -5, 0, 35)
 delBtn.Position = UDim2.new(0.68, 0, 0, 295)
 
-
 -- ============ LOGIC & RENDER ============
 local function render()
-    -- Render Teleport List (Gabungan Summit CPs + Custom)
     for _, v in ipairs(tpScroll:GetChildren()) do 
         if v:IsA("Frame") then v:Destroy() end 
     end
@@ -453,7 +497,6 @@ local function render()
         end
     end
 
-    -- 1. Masukkan semua CP Summit (Mount Soreya)
     local sKeys = {}
     for k, _ in pairs(config.summitCPs) do table.insert(sKeys, k) end
     table.sort(sKeys)
@@ -462,7 +505,6 @@ local function render()
         addRow(nm, config.summitCPs[i], false, nil)
     end
 
-    -- 2. Masukkan Custom Spots
     for i, pos in ipairs(config.customSpots) do
         addRow("Spot "..i, pos, true, i)
     end
