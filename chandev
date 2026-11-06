@@ -1,4 +1,4 @@
--- CHANN DEV | Ultimate Premium Dashboard (Stable)
+-- CHANN DEV | Ultimate Premium Dashboard (Fixed)
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -43,8 +43,8 @@ local config = {
         [18] = Vector3.new(-5543.9, 1112.61, -11651.75),
         [19] = Vector3.new(-6766.57, 1106.15, -11507.13),
         [20] = Vector3.new(-6761.15, 1114.65, -10800.55),
-        [21] = Vector3.new(-6766.88, 1313.09, -10082.26),
-        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)
+        [21] = Vector3.new(-6766.88, 1313.09, -10082.26), -- Summit
+        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)   -- BC
     },
     customSpots = {}
 }
@@ -71,7 +71,6 @@ gui.Name = "ChannDev_Premium"
 gui.Parent = CoreGui
 gui.ResetOnSpawn = false
 
--- Fungsi Notifikasi
 local function notify(titleText, descText)
     local notif = Instance.new("Frame")
     notif.Size = UDim2.new(0, 250, 0, 60)
@@ -106,17 +105,16 @@ local function notify(titleText, descText)
     t2.TextXAlignment = Enum.TextXAlignment.Left
     t2.Parent = notif
 
-    TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(1, -270, 0, 20)}):Play()
+    TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(1, -270, 0, 20)}):Play()
     
     task.delay(3, function()
-        local tw = TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 20, 0, 20)})
+        local tw = TweenService:Create(notif, TweenInfo.new(0.3), {Position = UDim2.new(1, 20, 0, 20)})
         tw:Play()
         tw.Completed:Wait()
         notif:Destroy()
     end)
 end
 
--- Drag Logic
 local function makeDraggable(frame, dragArea)
     local dragging, dragInput, dragStart, startPos
     dragArea.InputBegan:Connect(function(input)
@@ -224,7 +222,10 @@ content.Position = UDim2.new(0, 170, 0, 65)
 content.BackgroundTransparency = 1
 content.Parent = mainFrame
 
+-- FIX TAB LOGIC
 local tabs = {}
+local tabBtns = {} -- Simpen tombol biar gak salah index
+
 local function createSidebarTab(name, index)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -20, 0, 45)
@@ -243,6 +244,7 @@ local function createSidebarTab(name, index)
     page.Visible = false
     page.Parent = content
     tabs[btn] = page
+    table.insert(tabBtns, btn) -- Masukin ke list biar gampang dipanggil
     
     btn.MouseEnter:Connect(function()
         if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}):Play() end
@@ -598,8 +600,11 @@ minBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 toggleBtn.MouseButton1Click:Connect(function() mainFrame.Visible = not mainFrame.Visible end)
 
-tabs[sidebar:GetChildren()[1]].Visible = true
-TweenService:Create(sidebar:GetChildren()[1], TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80), TextColor3 = Color3.new(1,1,1)}):Play()
+-- FIX TAB DEFAULT
+if tabBtns[1] then
+    tabs[tabBtns[1]].Visible = true
+    TweenService:Create(tabBtns[1], TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80), TextColor3 = Color3.new(1,1,1)}):Play()
+end
 
 -- JALANKAN RENDER SETELAH SEMUA UI SELESAI DIBUAT
 render()
