@@ -1,4 +1,4 @@
--- CHANN DEV | Ultimate Dashboard (Toggle Summit + Custom TP + Config Manager)
+-- CHANN DEV | Ultra Premium Dashboard
 -- Loadstring Ready
 
 local Players = game:GetService("Players")
@@ -9,7 +9,7 @@ local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 
-local oldGui = CoreGui:FindFirstChild("ChannDev_Dashboard")
+local oldGui = CoreGui:FindFirstChild("ChannDev_Premium")
 if oldGui then oldGui:Destroy() end
 
 -- ============ DEFAULT CONFIG ============
@@ -19,7 +19,6 @@ local config = {
     tpSpeed = 1.5,
     antiAfk = true,
     autoSummit = false,
-    -- Data Bawaan Mount Soreya
     summitCPs = {
         [0] = Vector3.new(462.22, 444.92, -8894.67),
         [1] = Vector3.new(463.75, 455.33, -8945.72),
@@ -42,10 +41,9 @@ local config = {
         [18] = Vector3.new(-5543.9, 1112.61, -11651.75),
         [19] = Vector3.new(-6766.57, 1106.15, -11507.13),
         [20] = Vector3.new(-6761.15, 1114.65, -10800.55),
-        [21] = Vector3.new(-6766.88, 1313.09, -10082.26), -- Summit
-        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)   -- BC
+        [21] = Vector3.new(-6766.88, 1313.09, -10082.26),
+        [22] = Vector3.new(-6835.35, 1328.86, -9902.17)
     },
-    -- Data Manual Lo
     customSpots = {}
 }
 
@@ -91,12 +89,58 @@ local function makeDraggable(frame, dragArea)
     end)
 end
 
+-- ============ NOTIFIKASI TOAST ============
+local function notify(titleText, descText, duration)
+    local notif = Instance.new("Frame")
+    notif.Size = UDim2.new(0, 250, 0, 60)
+    notif.Position = UDim2.new(1, 20, 0, 20)
+    notif.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    notif.Parent = gui
+    Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 8)
+    
+    local stroke = Instance.new("UIStroke", notif)
+    stroke.Color = Color3.fromRGB(130, 60, 200)
+    stroke.Thickness = 2
+    
+    local t1 = Instance.new("TextLabel")
+    t1.Size = UDim2.new(1, -10, 0, 25)
+    t1.Position = UDim2.new(0, 10, 0, 5)
+    t1.BackgroundTransparency = 1
+    t1.Text = titleText
+    t1.TextColor3 = Color3.fromRGB(130, 60, 200)
+    t1.Font = Enum.Font.GothamBold
+    t1.TextSize = 14
+    t1.TextXAlignment = Enum.TextXAlignment.Left
+    t1.Parent = notif
+    
+    local t2 = Instance.new("TextLabel")
+    t2.Size = UDim2.new(1, -10, 0, 25)
+    t2.Position = UDim2.new(0, 10, 0, 25)
+    t2.BackgroundTransparency = 1
+    t2.Text = descText
+    t2.TextColor3 = Color3.fromRGB(200, 200, 200)
+    t2.Font = Enum.Font.Gotham
+    t2.TextSize = 12
+    t2.TextXAlignment = Enum.TextXAlignment.Left
+    t2.Parent = notif
+
+    TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(1, -270, 0, 20)}):Play()
+    
+    task.delay(duration or 3, function()
+        local tw = TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 20, 0, 20)})
+        tw:Play()
+        tw.Completed:Wait()
+        notif:Destroy()
+    end)
+end
+
 -- ============ UI SETUP ============
 local gui = Instance.new("ScreenGui")
-gui.Name = "ChannDev_Dashboard"
+gui.Name = "ChannDev_Premium"
 gui.Parent = CoreGui
 gui.ResetOnSpawn = false
 
+-- Logo C
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(0, 50, 0, 50)
 toggleBtn.Position = UDim2.new(0, 20, 0, 20)
@@ -107,36 +151,55 @@ toggleBtn.Font = Enum.Font.GothamBlack
 toggleBtn.TextSize = 22
 toggleBtn.Parent = gui
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1,0)
+makeDraggable(toggleBtn, toggleBtn) -- Logo bisa digeser
 
+-- MAIN WINDOW (Lebih Lebar & Elegan)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 600, 0, 420)
-mainFrame.Position = UDim2.new(0.5, -300, 0.5, -210)
-mainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+mainFrame.Size = UDim2.new(0, 650, 0, 450)
+mainFrame.Position = UDim2.new(0.5, -325, 0.5, -225)
+mainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
 mainFrame.Visible = false
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
 
+local bgGradient = Instance.new("UIGradient")
+bgGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 40)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 22))
+}
+bgGradient.Rotation = 45
+bgGradient.Parent = mainFrame
+
+-- Top Bar
 local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(1, 0, 0, 50)
-topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+topBar.Size = UDim2.new(1, 0, 0, 55)
+topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 topBar.Parent = mainFrame
-Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 12)
 makeDraggable(mainFrame, topBar)
+
+local topGrad = Instance.new("UIGradient")
+topGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 65)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 45))
+}
+topGrad.Rotation = 90
+topGrad.Parent = topBar
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
-title.Text = "  CHANN DEV | Dashboard"
+title.Text = "  CHANN DEV | Premium UI"
 title.TextColor3 = Color3.new(1,1,1)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 16
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = topBar
 
 local minBtn = Instance.new("TextButton")
 minBtn.Size = UDim2.new(0, 35, 0, 35)
-minBtn.Position = UDim2.new(1, -85, 0, 7)
+minBtn.Position = UDim2.new(1, -85, 0, 10)
 minBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 minBtn.Text = "-"
 minBtn.TextColor3 = Color3.new(1,1,1)
@@ -147,7 +210,7 @@ Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 6)
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 35, 0, 35)
-closeBtn.Position = UDim2.new(1, -45, 0, 7)
+closeBtn.Position = UDim2.new(1, -45, 0, 10)
 closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
 closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.new(1,1,1)
@@ -156,14 +219,15 @@ closeBtn.Parent = topBar
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
 
 local sidebar = Instance.new("Frame")
-sidebar.Size = UDim2.new(0, 150, 1, -50)
-sidebar.Position = UDim2.new(0, 0, 0, 50)
-sidebar.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
+sidebar.Size = UDim2.new(0, 160, 1, -70)
+sidebar.Position = UDim2.new(0, 10, 0, 65)
+sidebar.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
 sidebar.Parent = mainFrame
+Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 8)
 
 local content = Instance.new("Frame")
-content.Size = UDim2.new(1, -160, 1, -60)
-content.Position = UDim2.new(0, 155, 0, 55)
+content.Size = UDim2.new(1, -180, 1, -70)
+content.Position = UDim2.new(0, 170, 0, 65)
 content.BackgroundTransparency = 1
 content.Parent = mainFrame
 
@@ -172,9 +236,9 @@ local function createSidebarTab(name, index)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -20, 0, 45)
     btn.Position = UDim2.new(0, 10, 0, 15 + (index * 50))
-    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
+    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
     btn.Text = "  " .. name
-    btn.TextColor3 = Color3.fromRGB(180, 180, 190)
+    btn.TextColor3 = Color3.fromRGB(180, 180, 200)
     btn.Font = Enum.Font.GothamBold
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.Parent = sidebar
@@ -188,209 +252,208 @@ local function createSidebarTab(name, index)
     tabs[btn] = page
     
     btn.MouseEnter:Connect(function()
-        if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 50)}):Play() end
+        if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}):Play() end
     end)
     btn.MouseLeave:Connect(function()
-        if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 36)}):Play() end
+        if not page.Visible then TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 38)}):Play() end
     end)
     btn.MouseButton1Click:Connect(function()
         for b, p in pairs(tabs) do
             p.Visible = false
-            TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 36), TextColor3 = Color3.fromRGB(180, 180, 190)}):Play()
+            TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 38), TextColor3 = Color3.fromRGB(180, 180, 200)}):Play()
         end
         page.Visible = true
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 65), TextColor3 = Color3.new(1,1,1)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80), TextColor3 = Color3.new(1,1,1)}):Play()
     end)
     return page
 end
 
--- ============ TAB 1: CHECKPOINT (Auto Summit Toggle) ============
+-- ============ TAB 1: AUTO SUMMIT ============
 local cpPage = createSidebarTab("Auto Summit", 0)
-local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, -20, 1, -60)
-scroll.Position = UDim2.new(0, 10, 0, 10)
-scroll.BackgroundTransparency = 1
-scroll.Parent = cpPage
-Instance.new("UIListLayout", scroll)
-
-local cpBottomFrame = Instance.new("Frame")
-cpBottomFrame.Size = UDim2.new(1, 0, 0, 45)
-cpBottomFrame.Position = UDim2.new(0, 0, 1, -45)
-cpBottomFrame.BackgroundTransparency = 1
-cpBottomFrame.Parent = cpPage
-
 local autoBtn = Instance.new("TextButton")
-autoBtn.Size = UDim2.new(1, 0, 1, 0)
+autoBtn.Size = UDim2.new(1, 0, 0, 50)
+autoBtn.Position = UDim2.new(0, 0, 1, -50)
 autoBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
 autoBtn.Text = "AUTO SUMMIT: OFF"
 autoBtn.TextColor3 = Color3.new(1,1,1)
-autoBtn.Font = Enum.Font.GothamBold
-autoBtn.Parent = cpBottomFrame
-Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 6)
+autoBtn.Font = Enum.Font.GothamBlack
+autoBtn.TextSize = 16
+autoBtn.Parent = cpPage
+Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 8)
 
--- ============ TAB 2: TELEPORTASI (Custom Spots) ============
+local infoTxt = Instance.new("TextLabel")
+infoTxt.Size = UDim2.new(1, 0, 1, -60)
+infoTxt.BackgroundTransparency = 1
+infoTxt.Text = "Fitur ini akan membawa karakter Anda\nsecara otomatis dari Basecamp (CP0)\nmenuju puncak (Summit), lalu kembali lagi."
+infoTxt.TextColor3 = Color3.fromRGB(150, 150, 160)
+infoTxt.Font = Enum.Font.Gotham
+infoTxt.TextSize = 14
+infoTxt.TextYAlignment = Enum.TextYAlignment.Top
+infoTxt.Parent = cpPage
+
+-- ============ TAB 2: TELEPORTASI ============
 local tpPage = createSidebarTab("Teleportasi", 1)
 local tpScroll = Instance.new("ScrollingFrame")
-tpScroll.Size = UDim2.new(1, -20, 1, -60)
-tpScroll.Position = UDim2.new(0, 10, 0, 10)
+tpScroll.Size = UDim2.new(1, 0, 1, -60)
 tpScroll.BackgroundTransparency = 1
 tpScroll.Parent = tpPage
 Instance.new("UIListLayout", tpScroll)
 
-local tpBottomFrame = Instance.new("Frame")
-tpBottomFrame.Size = UDim2.new(1, 0, 0, 45)
-tpBottomFrame.Position = UDim2.new(0, 0, 1, -45)
-tpBottomFrame.BackgroundTransparency = 1
-tpBottomFrame.Parent = tpPage
-
 local addSpotBtn = Instance.new("TextButton")
-addSpotBtn.Size = UDim2.new(1, 0, 1, 0)
+addSpotBtn.Size = UDim2.new(1, 0, 0, 45)
+addSpotBtn.Position = UDim2.new(0, 0, 1, -45)
 addSpotBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
 addSpotBtn.Text = "+ Simpan Posisi Ini"
 addSpotBtn.TextColor3 = Color3.new(1,1,1)
 addSpotBtn.Font = Enum.Font.GothamBold
-addSpotBtn.Parent = tpBottomFrame
-Instance.new("UICorner", addSpotBtn).CornerRadius = UDim.new(0, 6)
+addSpotBtn.Parent = tpPage
+Instance.new("UICorner", addSpotBtn).CornerRadius = UDim.new(0, 8)
 
--- ============ TAB 3: SETTINGS & CONFIG ============
-local setPage = createSidebarTab("Settings & Config", 2)
+-- ============ TAB 3: SETTINGS ============
+local setPage = createSidebarTab("Settings", 2)
 
--- TP Speed
+local function makeSettingBtn(txt, posY, color, callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, 0, 0, 40)
+    b.Position = UDim2.new(0, 0, 0, posY)
+    b.BackgroundColor3 = color
+    b.Text = txt
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.Parent = setPage
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    b.MouseButton1Click:Connect(callback)
+    return b
+end
+
 local tpSpdLabel = Instance.new("TextLabel")
-tpSpdLabel.Size = UDim2.new(1, 0, 0, 25)
+tpSpdLabel.Size = UDim2.new(1, 0, 0, 20)
 tpSpdLabel.BackgroundTransparency = 1
-tpSpdLabel.Text = "Kecepatan Auto Summit: " .. config.tpSpeed .. "s"
+tpSpdLabel.Text = "Kecepatan TP: " .. config.tpSpeed .. "s"
 tpSpdLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 tpSpdLabel.Font = Enum.Font.Gotham
 tpSpdLabel.TextXAlignment = Enum.TextXAlignment.Left
 tpSpdLabel.Parent = setPage
 
-local tpSpdBtn = Instance.new("TextButton")
-tpSpdBtn.Size = UDim2.new(0.5, -5, 0, 30)
-tpSpdBtn.Position = UDim2.new(0, 0, 0, 25)
-tpSpdBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
-tpSpdBtn.Text = "Ubah TP Speed"
-tpSpdBtn.TextColor3 = Color3.new(1,1,1)
-tpSpdBtn.Font = Enum.Font.GothamBold
-tpSpdBtn.Parent = setPage
-Instance.new("UICorner", tpSpdBtn).CornerRadius = UDim.new(0, 6)
+local tpSpdBtn = makeSettingBtn("Ubah TP Speed", 25, Color3.fromRGB(200, 150, 50), function()
+    config.tpSpeed = config.tpSpeed + 0.5
+    if config.tpSpeed > 3.0 then config.tpSpeed = 0.5 end
+    tpSpdLabel.Text = "Kecepatan TP: " .. config.tpSpeed .. "s"
+end)
 
-local flyBtn = Instance.new("TextButton")
-flyBtn.Size = UDim2.new(0.5, -5, 0, 30)
-flyBtn.Position = UDim2.new(0.5, 5, 0, 25)
-flyBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
-flyBtn.Text = "FLY: OFF"
-flyBtn.TextColor3 = Color3.new(1,1,1)
-flyBtn.Font = Enum.Font.GothamBold
-flyBtn.Parent = setPage
-Instance.new("UICorner", flyBtn).CornerRadius = UDim.new(0, 6)
+local flyBtn = makeSettingBtn("FLY: OFF", 75, Color3.fromRGB(130, 60, 200), function()
+    config.flying = not config.flying
+    if config.flying then
+        flyBtn.Text = "FLY: ON"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+        notify("Fly Enabled", "Mode terbang diaktifkan")
+    else
+        flyBtn.Text = "FLY: OFF"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
+        notify("Fly Disabled", "Mode terbang dimatikan")
+    end
+end)
 
--- CONFIG MANAGER (Save, Load, Delete)
-local configTitle = Instance.new("TextLabel")
-configTitle.Size = UDim2.new(1, 0, 0, 25)
-configTitle.Position = UDim2.new(0, 0, 0, 70)
-configTitle.BackgroundTransparency = 1
-configTitle.Text = "--- CONFIG MANAGER ---"
-configTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-configTitle.Font = Enum.Font.GothamBold
-configTitle.Parent = setPage
+local afkBtn = makeSettingBtn("ANTI AFK: ON", 125, Color3.fromRGB(40, 150, 100), function()
+    config.antiAfk = not config.antiAfk
+    if config.antiAfk then
+        afkBtn.Text = "ANTI AFK: ON"
+        afkBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+        notify("Anti AFK", "Fitur Anti AFK dinyalakan")
+    else
+        afkBtn.Text = "ANTI AFK: OFF"
+        afkBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+        notify("Anti AFK", "Fitur Anti AFK dimatikan")
+    end
+end)
 
-local configInput = Instance.new("TextBox")
-configInput.Size = UDim2.new(1, 0, 0, 30)
-configInput.Position = UDim2.new(0, 0, 0, 95)
-configInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-configInput.PlaceholderText = "Nama Config (cth: CP_Utama)"
-configInput.Text = "Config_1"
-configInput.TextColor3 = Color3.new(1,1,1)
-configInput.Parent = setPage
-Instance.new("UICorner", configInput).CornerRadius = UDim.new(0, 6)
+local rejoinBtn = makeSettingBtn("REJOIN SERVER", 175, Color3.fromRGB(50, 150, 250), function()
+    notify("Rejoining...", "Menghubungkan ulang ke server")
+    task.wait(1)
+    local sistem = ReplicatedStorage:FindFirstChild("Remote")
+    if sistem then sistem = sistem:FindFirstChild("Sistem") end
+    if sistem and sistem:FindFirstChild("Rejoin") then
+        sistem.Rejoin:FireServer()
+    else
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    end
+end)
 
-local saveCfgBtn = Instance.new("TextButton")
-saveCfgBtn.Size = UDim2.new(0.32, -5, 0, 30)
-saveCfgBtn.Position = UDim2.new(0, 0, 0, 135)
-saveCfgBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
-saveCfgBtn.Text = "Save"
-saveCfgBtn.TextColor3 = Color3.new(1,1,1)
-saveCfgBtn.Font = Enum.Font.GothamBold
-saveCfgBtn.Parent = setPage
-Instance.new("UICorner", saveCfgBtn).CornerRadius = UDim.new(0, 6)
+-- CONFIG MANAGER
+local cfgTitle = Instance.new("TextLabel")
+cfgTitle.Size = UDim2.new(1, 0, 0, 20)
+cfgTitle.Position = UDim2.new(0, 0, 0, 225)
+cfgTitle.BackgroundTransparency = 1
+cfgTitle.Text = "CONFIG MANAGER"
+cfgTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+cfgTitle.Font = Enum.Font.GothamBold
+cfgTitle.Parent = setPage
 
-local loadCfgBtn = Instance.new("TextButton")
-loadCfgBtn.Size = UDim2.new(0.32, -5, 0, 30)
-loadCfgBtn.Position = UDim2.new(0.34, 0, 0, 135)
-loadCfgBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 220)
-loadCfgBtn.Text = "Load"
-loadCfgBtn.TextColor3 = Color3.new(1,1,1)
-loadCfgBtn.Font = Enum.Font.GothamBold
-loadCfgBtn.Parent = setPage
-Instance.new("UICorner", loadCfgBtn).CornerRadius = UDim.new(0, 6)
+local cfgInput = Instance.new("TextBox")
+cfgInput.Size = UDim2.new(1, 0, 0, 35)
+cfgInput.Position = UDim2.new(0, 0, 0, 250)
+cfgInput.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+cfgInput.PlaceholderText = "Nama Config (cth: CP_Utama)"
+cfgInput.Text = "Config_1"
+cfgInput.TextColor3 = Color3.new(1,1,1)
+cfgInput.Parent = setPage
+Instance.new("UICorner", cfgInput).CornerRadius = UDim.new(0, 6)
 
-local delCfgBtn = Instance.new("TextButton")
-delCfgBtn.Size = UDim2.new(0.32, -5, 0, 30)
-delCfgBtn.Position = UDim2.new(0.68, 0, 0, 135)
-delCfgBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
-delCfgBtn.Text = "Delete"
-delCfgBtn.TextColor3 = Color3.new(1,1,1)
-delCfgBtn.Font = Enum.Font.GothamBold
-delCfgBtn.Parent = setPage
-Instance.new("UICorner", delCfgBtn).CornerRadius = UDim.new(0, 6)
+local saveBtn = makeSettingBtn("Save Config", 295, Color3.fromRGB(40, 150, 100), function()
+    if writefile then
+        local fName = cfgInput.Text .. ".json"
+        local data = { speed = config.speed, tpSpeed = config.tpSpeed, customSpots = {} }
+        for i, v in ipairs(config.customSpots) do data.customSpots[i] = {X = v.X, Y = v.Y, Z = v.Z} end
+        pcall(function()
+            writefile(fName, HttpService:JSONEncode(data))
+            notify("Config Saved", "Tersimpan sebagai " .. fName)
+        end)
+    end
+end)
+saveBtn.Size = UDim2.new(0.32, -5, 0, 35)
+saveBtn.Position = UDim2.new(0, 0, 0, 295)
 
--- ANTI AFK & REJOIN
-local afkBtn = Instance.new("TextButton")
-afkBtn.Size = UDim2.new(0.5, -5, 0, 30)
-afkBtn.Position = UDim2.new(0, 0, 0, 185)
-afkBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
-afkBtn.Text = "ANTI AFK: ON"
-afkBtn.TextColor3 = Color3.new(1,1,1)
-afkBtn.Font = Enum.Font.GothamBold
-afkBtn.Parent = setPage
-Instance.new("UICorner", afkBtn).CornerRadius = UDim.new(0, 6)
+local loadBtn = makeSettingBtn("Load Config", 295, Color3.fromRGB(50, 130, 220), function()
+    if isfile then
+        local fName = cfgInput.Text .. ".json"
+        if isfile(fName) then
+            local success, data = pcall(function() return HttpService:JSONDecode(readfile(fName)) end)
+            if success and data then
+                if data.speed then config.speed = data.speed end
+                if data.tpSpeed then config.tpSpeed = data.tpSpeed end
+                if data.customSpots then
+                    config.customSpots = {}
+                    for i, v in pairs(data.customSpots) do
+                        config.customSpots[tonumber(i)] = Vector3.new(v.X, v.Y, v.Z)
+                    end
+                end
+                render()
+                notify("Config Loaded", "Berhasil memuat " .. fName)
+            end
+        else
+            notify("Gagal", "File config tidak ditemukan")
+        end
+    end
+end)
+loadBtn.Size = UDim2.new(0.32, -5, 0, 35)
+loadBtn.Position = UDim2.new(0.34, 0, 0, 295)
 
-local rejoinBtn = Instance.new("TextButton")
-rejoinBtn.Size = UDim2.new(0.5, -5, 0, 30)
-rejoinBtn.Position = UDim2.new(0.5, 5, 0, 185)
-rejoinBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
-rejoinBtn.Text = "REJOIN SERVER"
-rejoinBtn.TextColor3 = Color3.new(1,1,1)
-rejoinBtn.Font = Enum.Font.GothamBold
-rejoinBtn.Parent = setPage
-Instance.new("UICorner", rejoinBtn).CornerRadius = UDim.new(0, 6)
+local delBtn = makeSettingBtn("Delete Config", 295, Color3.fromRGB(200, 50, 80), function()
+    if delfile then
+        local fName = cfgInput.Text .. ".json"
+        pcall(function() delfile(fName) end)
+        notify("Config Deleted", "File " .. fName .. " dihapus")
+    end
+end)
+delBtn.Size = UDim2.new(0.32, -5, 0, 35)
+delBtn.Position = UDim2.new(0.68, 0, 0, 295)
 
 -- ============ LOGIC & RENDER ============
 local function render()
-    -- Render Auto Summit List
-    for _, v in ipairs(scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
-    local sKeys = {}
-    for k, _ in pairs(config.summitCPs) do table.insert(sKeys, k) end
-    table.sort(sKeys)
-    for _, i in ipairs(sKeys) do
-        local pos = config.summitCPs[i]
-        local row = Instance.new("Frame")
-        row.Size = UDim2.new(1, -10, 0, 30)
-        row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
-        row.Parent = scroll
-        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
-        
-        local nameTxt = (i == 0 and "Basecamp") or (i == 21 and "Summit") or (i == 22 and "Balik BC") or "CP "..i
-        local num = Instance.new("TextLabel")
-        num.Size = UDim2.new(1, 0, 1, 0)
-        num.Position = UDim2.new(0, 10, 0, 0)
-        num.BackgroundTransparency = 1
-        num.Text = nameTxt .. "  |  ("..math.floor(pos.X)..", "..math.floor(pos.Y)..", "..math.floor(pos.Z)..")"
-        num.TextColor3 = Color3.new(1,1,1)
-        num.Font = Enum.Font.Gotham
-        num.TextSize = 12
-        num.TextXAlignment = Enum.TextXAlignment.Left
-        num.Parent = row
-    end
-
-    -- Render Custom TP List
+    -- Render Teleport List (Gabungan Summit CPs + Custom)
     for _, v in ipairs(tpScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
-    local cKeys = {}
-    for k, _ in pairs(config.customSpots) do table.insert(cKeys, k) end
-    table.sort(cKeys)
-    for _, i in ipairs(cKeys) do
-        local pos = config.customSpots[i]
+    
+    local function addRow(name, pos, isCustom, index)
         local row = Instance.new("Frame")
         row.Size = UDim2.new(1, -10, 0, 35)
         row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
@@ -398,9 +461,9 @@ local function render()
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
         
         local num = Instance.new("TextLabel")
-        num.Size = UDim2.new(0, 40, 1, 0)
+        num.Size = UDim2.new(0, 80, 1, 0)
         num.BackgroundTransparency = 1
-        num.Text = "Spot "..i
+        num.Text = name
         num.TextColor3 = Color3.new(1,1,1)
         num.Font = Enum.Font.GothamBold
         num.TextSize = 12
@@ -415,21 +478,41 @@ local function render()
         tpB.Font = Enum.Font.GothamBold
         tpB.Parent = row
         Instance.new("UICorner", tpB).CornerRadius = UDim.new(0, 4)
-        tpB.MouseButton1Click:Connect(function() tpTo(pos) end)
-        
-        local delB = Instance.new("TextButton")
-        delB.Size = UDim2.new(0, 40, 1, -10)
-        delB.Position = UDim2.new(1, -45, 0, 5)
-        delB.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
-        delB.Text = "X"
-        delB.TextColor3 = Color3.new(1,1,1)
-        delB.Font = Enum.Font.GothamBold
-        delB.Parent = row
-        Instance.new("UICorner", delB).CornerRadius = UDim.new(0, 4)
-        delB.MouseButton1Click:Connect(function()
-            table.remove(config.customSpots, i)
-            render()
+        tpB.MouseButton1Click:Connect(function() 
+            tpTo(pos) 
+            notify("Teleport", "Berpindah ke " .. name)
         end)
+        
+        if isCustom then
+            local delB = Instance.new("TextButton")
+            delB.Size = UDim2.new(0, 40, 1, -10)
+            delB.Position = UDim2.new(1, -45, 0, 5)
+            delB.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
+            delB.Text = "X"
+            delB.TextColor3 = Color3.new(1,1,1)
+            delB.Font = Enum.Font.GothamBold
+            delB.Parent = row
+            Instance.new("UICorner", delB).CornerRadius = UDim.new(0, 4)
+            delB.MouseButton1Click:Connect(function()
+                table.remove(config.customSpots, index)
+                render()
+                notify("Dihapus", "Spot manual dihapus")
+            end)
+        end
+    end
+
+    -- 1. Masukkan semua CP Summit (Mount Soreya)
+    local sKeys = {}
+    for k, _ in pairs(config.summitCPs) do table.insert(sKeys, k) end
+    table.sort(sKeys)
+    for _, i in ipairs(sKeys) do
+        local nm = (i == 0 and "Basecamp") or (i == 21 and "Summit") or (i == 22 and "Balik BC") or "CP "..i
+        addRow(nm, config.summitCPs[i], false, nil)
+    end
+
+    -- 2. Masukkan Custom Spots
+    for i, pos in ipairs(config.customSpots) do
+        addRow("Spot "..i, pos, true, i)
     end
 end
 
@@ -439,6 +522,7 @@ autoBtn.MouseButton1Click:Connect(function()
     if config.autoSummit then
         autoBtn.Text = "AUTO SUMMIT: ON"
         autoBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+        notify("Auto Summit", "Menaiki gunung otomatis")
         task.spawn(function()
             while config.autoSummit do
                 for i = 0, 22 do
@@ -460,101 +544,21 @@ autoBtn.MouseButton1Click:Connect(function()
     else
         autoBtn.Text = "AUTO SUMMIT: OFF"
         autoBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 80)
+        notify("Auto Summit", "Berhenti menaiki gunung")
     end
 end)
 
--- Logic Custom Spots
+-- Logic Add Spot
 addSpotBtn.MouseButton1Click:Connect(function()
     local hrp = getHRP()
     if hrp then
         table.insert(config.customSpots, hrp.Position)
         render()
+        notify("Tersimpan", "Posisi lo sekarang berhasil disimpan")
     end
 end)
 
--- Logic Config
-saveCfgBtn.MouseButton1Click:Connect(function()
-    if writefile then
-        local fileName = configInput.Text .. ".json"
-        local data = { 
-            speed = config.speed, 
-            tpSpeed = config.tpSpeed,
-            customSpots = {}
-        }
-        for i, v in ipairs(config.customSpots) do
-            data.customSpots[i] = {X = v.X, Y = v.Y, Z = v.Z}
-        end
-        pcall(function()
-            writefile(fileName, HttpService:JSONEncode(data))
-            saveCfgBtn.Text = "OK!"
-            task.wait(1)
-            saveCfgBtn.Text = "Save"
-        end)
-    end
-end)
-
-loadCfgBtn.MouseButton1Click:Connect(function()
-    if isfile then
-        local fileName = configInput.Text .. ".json"
-        if isfile(fileName) then
-            local success, data = pcall(function() return HttpService:JSONDecode(readfile(fileName)) end)
-            if success and data then
-                if data.speed then config.speed = data.speed end
-                if data.tpSpeed then config.tpSpeed = data.tpSpeed end
-                if data.customSpots then
-                    config.customSpots = {}
-                    for i, v in pairs(data.customSpots) do
-                        config.customSpots[tonumber(i)] = Vector3.new(v.X, v.Y, v.Z)
-                    end
-                end
-                render()
-                loadCfgBtn.Text = "Loaded!"
-                task.wait(1)
-                loadCfgBtn.Text = "Load"
-            end
-        end
-    end
-end)
-
-delCfgBtn.MouseButton1Click:Connect(function()
-    if delfile then
-        local fileName = configInput.Text .. ".json"
-        pcall(function() delfile(fileName) end)
-        delCfgBtn.Text = "Deleted!"
-        task.wait(1)
-        delCfgBtn.Text = "Delete"
-    end
-end)
-
--- Logic Speed & Fly & AFK
-tpSpdBtn.MouseButton1Click:Connect(function()
-    config.tpSpeed = config.tpSpeed + 0.5
-    if config.tpSpeed > 3.0 then config.tpSpeed = 0.5 end
-    tpSpdLabel.Text = "Kecepatan Auto Summit: " .. config.tpSpeed .. "s"
-end)
-
-afkBtn.MouseButton1Click:Connect(function()
-    config.antiAfk = not config.antiAfk
-    if config.antiAfk then
-        afkBtn.Text = "ANTI AFK: ON"
-        afkBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
-    else
-        afkBtn.Text = "ANTI AFK: OFF"
-        afkBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-    end
-end)
-
-rejoinBtn.MouseButton1Click:Connect(function()
-    local sistem = ReplicatedStorage:FindFirstChild("Remote")
-    if sistem then sistem = sistem:FindFirstChild("Sistem") end
-    if sistem and sistem:FindFirstChild("Rejoin") then
-        sistem.Rejoin:FireServer()
-    else
-        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-    end
-end)
-
--- ANTI AFK LOOP
+-- Anti AFK & Fly
 task.spawn(function()
     while task.wait(60) do
         if config.antiAfk and LocalPlayer.Character then
@@ -563,53 +567,44 @@ task.spawn(function()
     end
 end)
 
--- FLY
-local flying = false
 local flyConnection, bv, bg
-flyBtn.MouseButton1Click:Connect(function()
-    flying = not flying
-    if flying then
-        flyBtn.Text = "FLY: ON"
-        flyBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 100)
+RunService.RenderStepped:Connect(function()
+    if config.flying then
         local hrp = getHRP()
         if hrp then
-            bv = Instance.new("BodyVelocity")
-            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-            bv.Velocity = Vector3.zero
-            bv.Parent = hrp
-            bg = Instance.new("BodyGyro")
-            bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-            bg.P = 3000
-            bg.Parent = hrp
-            flyConnection = RunService.RenderStepped:Connect(function()
-                if not getHRP() then return end
-                local cam = workspace.CurrentCamera
-                local dir = Vector3.zero
-                if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-                if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-                if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-                if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-                if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.yAxis end
-                if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.yAxis end
-                if dir.Magnitude > 0 then dir = dir.Unit * config.flySpeed end
-                bv.Velocity = dir
-                bg.CFrame = cam.CFrame
-            end)
+            if not bv or bv.Parent ~= hrp then
+                if bv then bv:Destroy() end
+                if bg then bg:Destroy() end
+                bv = Instance.new("BodyVelocity", hrp)
+                bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+                bg = Instance.new("BodyGyro", hrp)
+                bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+                bg.P = 3000
+            end
+            local cam = workspace.CurrentCamera
+            local dir = Vector3.zero
+            if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+            if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+            if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+            if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.yAxis end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.yAxis end
+            if dir.Magnitude > 0 then dir = dir.Unit * config.flySpeed end
+            bv.Velocity = dir
+            bg.CFrame = cam.CFrame
         end
     else
-        flyBtn.Text = "FLY: OFF"
-        flyBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 200)
-        if flyConnection then flyConnection:Disconnect() end
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
+        if bv then bv:Destroy() bv = nil end
+        if bg then bg:Destroy() bg = nil end
     end
 end)
 
--- TUTUP/BUKA
+-- BUKA/TUTUP
 minBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 closeBtn.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
 toggleBtn.MouseButton1Click:Connect(function() mainFrame.Visible = not mainFrame.Visible end)
 
 tabs[sidebar:GetChildren()[1]].Visible = true
-TweenService:Create(sidebar:GetChildren()[1], TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 65), TextColor3 = Color3.new(1,1,1)}):Play()
+TweenService:Create(sidebar:GetChildren()[1], TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80), TextColor3 = Color3.new(1,1,1)}):Play()
 render()
+notify("ChannDev Loaded", "Selamat datang kembali, Dotbhai!")
